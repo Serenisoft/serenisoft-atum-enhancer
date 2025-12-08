@@ -46,6 +46,24 @@
 
 ## Neste Faser (TODO)
 
+### Fase 4.5: Forbedre PO-algoritme med Safety Stock ✅
+**Problem**: Nåværende algoritme kunne føre til at lageret gikk til 0 (stockout).
+
+**Løsning**: Implementert industri-standard formler:
+
+| Formel | Beskrivelse |
+|--------|-------------|
+| Reorder Point | (Gj.snitt daglig salg × Lead Time) + Safety Stock |
+| Safety Stock | Z × σ(Demand) × √Lead Time |
+| Z-score | Service level: 90%=1.28, 95%=1.65, 99%=2.33 |
+
+**Oppgaver:**
+- [x] Legg til setting for ønsket service level (90%, 95%, 99%)
+- [x] Beregn standardavvik for daglig salg (σ)
+- [x] Implementer Safety Stock-formel
+- [x] Oppdater Reorder Point til å inkludere Safety Stock
+- [x] Bruk leverandørens lead time i beregningen
+
 ### Fase 5: Automatisering
 - [ ] Scheduled task (WP Cron) for automatisk kjøring
 - [ ] Konfigurerbar kjørefrekvens
@@ -65,6 +83,7 @@
 | 2025-12-08 | Add ATUM settings integration | 906187d |
 | 2025-12-08 | Add supplier CSV import | 90ee1dd |
 | 2025-12-08 | Add PO suggestion algorithm | bab1653 |
+| 2025-12-08 | Add Safety Stock algorithm | - |
 
 ---
 
@@ -124,3 +143,36 @@ serenisoft-atum-enhancer/
 
 ### GitHub Repository
 https://github.com/Serenisoft/serenisoft-atum-enhancer
+
+---
+
+## Review: Safety Stock Implementering 2025-12-08
+
+### Problem
+Forrige algoritme beregnet kun optimal lagerbeholdning basert på gjennomsnittlig daglig salg og en prosent-terskel. Dette kunne føre til stockouts fordi det ikke tok hensyn til:
+- Variasjon i daglig salg (standardavvik)
+- Leverandørens leveringstid (lead time)
+- Ønsket service level
+
+### Løsning
+Implementert industri-standard inventory management formler:
+
+1. **Reorder Point** = (Avg Daily Sales × Lead Time) + Safety Stock
+2. **Safety Stock** = Z × σ(Demand) × √Lead Time
+
+### Endringer
+
+| Fil | Endring |
+|-----|---------|
+| `Settings.php` | Ny setting: Service Level (90%, 95%, 99%) |
+| `POSuggestionAlgorithm.php` | Ny metode: `get_demand_standard_deviation()` |
+| `POSuggestionAlgorithm.php` | Ny metode: `calculate_safety_stock()` |
+| `POSuggestionAlgorithm.php` | Oppdatert: `analyze_product()` med safety stock |
+| `POSuggestionAlgorithm.php` | Oppdatert: `get_products_needing_reorder()` med lead time |
+
+### Eksempel
+Med 5 enheter daglig salg, σ=2, 14 dagers lead time, 95% service level:
+- Safety Stock = 1.65 × 2 × √14 = 12.3 ≈ 13 enheter
+- Reorder Point = (5 × 14) + 13 = 83 enheter
+
+Bestilling trigges nå ved 83 enheter, ikke når lageret nærmer seg 0.

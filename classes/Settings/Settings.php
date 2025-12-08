@@ -161,6 +161,22 @@ class Settings {
 			'default' => 'yes',
 		);
 
+		$defaults['sae_service_level'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'po_algorithm',
+			'name'    => __( 'Service Level', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'How often you want products to be in stock. 95% means you accept being out of stock ~18 days/year. Higher = more safety stock = less stockouts, but more capital tied up in inventory.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'select',
+			'default' => '95',
+			'options' => array(
+				'options' => array(
+					'90' => __( '90% - Out of stock ~36 days/year (minimal safety stock)', 'serenisoft-atum-enhancer' ),
+					'95' => __( '95% - Out of stock ~18 days/year (recommended)', 'serenisoft-atum-enhancer' ),
+					'99' => __( '99% - Out of stock ~4 days/year (maximum safety)', 'serenisoft-atum-enhancer' ),
+				),
+			),
+		);
+
 		// Supplier Import Settings.
 		$defaults['sae_supplier_import'] = array(
 			'group'   => self::TAB_KEY,
