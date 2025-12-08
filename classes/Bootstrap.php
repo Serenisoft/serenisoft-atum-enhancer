@@ -14,6 +14,7 @@ namespace SereniSoft\AtumEnhancer;
 defined( 'ABSPATH' ) || die;
 
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
+use SereniSoft\AtumEnhancer\Settings\Settings;
 
 class Bootstrap {
 
@@ -68,8 +69,20 @@ class Bootstrap {
 		// Bootstrap the plugin.
 		$this->bootstrapped = true;
 
-		// Initialize plugin components here.
-		// TODO: Add Main class or component initialization.
+		// Initialize plugin components.
+		$this->init_components();
+
+	}
+
+	/**
+	 * Initialize plugin components
+	 *
+	 * @since 1.0.0
+	 */
+	private function init_components() {
+
+		// Initialize Settings.
+		Settings::get_instance();
 
 	}
 
