@@ -28,7 +28,7 @@ class SupplierImport {
 	/**
 	 * CSV delimiter
 	 */
-	const CSV_DELIMITER = ';';
+	const CSV_DELIMITER = ',';
 
 	/**
 	 * Column mapping from CSV to ATUM supplier fields

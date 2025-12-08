@@ -224,7 +224,7 @@ class Settings {
 		?>
 		<div class="sae-import-form">
 			<p class="description">
-				<?php esc_html_e( 'CSV format: Semicolon-separated with columns: Leverandørnummer, Navn, Organisasjonsnummer, Telefonnummer, Faksnummer, E-postadresse, Postadresse, Postnr., Sted, Land', 'serenisoft-atum-enhancer' ); ?>
+				<?php esc_html_e( 'CSV format: Comma-separated with columns including: Leverandørnummer, Navn, Organisasjonsnummer, Telefonnummer, Faksnummer, E-postadresse, Postadresse, Postnr., Sted, Land', 'serenisoft-atum-enhancer' ); ?>
 			</p>
 			<input type="file" id="sae-csv-file" accept=".csv" />
 			<button type="button" class="button" id="sae-preview-btn">
