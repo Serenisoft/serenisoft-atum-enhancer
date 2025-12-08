@@ -9,7 +9,7 @@
  * Requires Plugins:     woocommerce, atum-stock-manager-for-woocommerce
  * Plugin URI:           https://serenisoft.no/
  * Description:          Extends ATUM Inventory Management with automatic purchase order suggestions based on stock levels, lead times, and seasonal sales patterns.
- * Version:              0.2.0
+ * Version:              0.3.0
  * Author:               SereniSoft
  * Author URI:           https://serenisoft.no/
  * Requires at least:    5.9
@@ -26,7 +26,7 @@
 defined( 'ABSPATH' ) || die;
 
 if ( ! defined( 'SAE_VERSION' ) ) {
-	define( 'SAE_VERSION', '0.2.0' );
+	define( 'SAE_VERSION', '0.3.0' );
 }
 
 if ( ! defined( 'SAE_PHP_MINIMUM_VERSION' ) ) {
@@ -88,5 +88,21 @@ else {
 	// Use Composer's autoloader and PSR4 for naming convention.
 	require SAE_PATH . 'vendor/autoload.php';
 	\SereniSoft\AtumEnhancer\Bootstrap::get_instance();
+
+	// Plugin activation hook.
+	register_activation_hook( __FILE__, function() {
+		// Schedule cron if auto suggestions are enabled.
+		if ( class_exists( '\SereniSoft\AtumEnhancer\PurchaseOrderSuggestions\POSuggestionGenerator' ) ) {
+			\SereniSoft\AtumEnhancer\PurchaseOrderSuggestions\POSuggestionGenerator::get_instance()->maybe_reschedule_cron();
+		}
+	} );
+
+	// Plugin deactivation hook.
+	register_deactivation_hook( __FILE__, function() {
+		// Unschedule cron.
+		if ( class_exists( '\SereniSoft\AtumEnhancer\PurchaseOrderSuggestions\POSuggestionGenerator' ) ) {
+			\SereniSoft\AtumEnhancer\PurchaseOrderSuggestions\POSuggestionGenerator::get_instance()->unschedule_cron();
+		}
+	} );
 
 }

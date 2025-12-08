@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__playwright__browser_network_requests",
+      "mcp__playwright__browser_navigate"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

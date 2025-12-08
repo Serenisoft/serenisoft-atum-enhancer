@@ -17,6 +17,7 @@ namespace SereniSoft\AtumEnhancer\PurchaseOrderSuggestions;
 defined( 'ABSPATH' ) || die;
 
 use SereniSoft\AtumEnhancer\Settings\Settings;
+use SereniSoft\AtumEnhancer\Suppliers\SupplierFields;
 use Atum\Suppliers\Supplier;
 use Atum\Suppliers\Suppliers;
 
@@ -43,9 +44,13 @@ class POSuggestionAlgorithm {
 		}
 
 		// Get settings.
-		$use_seasonal      = 'yes' === Settings::get( 'sae_include_seasonal_analysis', 'yes' );
-		$orders_per_year   = (int) Settings::get( 'sae_default_orders_per_year', 4 );
-		$service_level     = Settings::get( 'sae_service_level', '95' );
+		$use_seasonal         = 'yes' === Settings::get( 'sae_include_seasonal_analysis', 'yes' );
+		$default_orders_year  = (int) Settings::get( 'sae_default_orders_per_year', 4 );
+		$service_level        = Settings::get( 'sae_service_level', '95' );
+
+		// Check for supplier-specific orders per year override.
+		$supplier_orders_year = SupplierFields::get_orders_per_year( $supplier_id );
+		$orders_per_year      = $supplier_orders_year ?? $default_orders_year;
 
 		// Calculate days of stock to maintain based on orders per year.
 		$days_of_stock_target = ceil( 365 / $orders_per_year );

@@ -83,7 +83,7 @@
 | 2025-12-08 | Add ATUM settings integration | 906187d |
 | 2025-12-08 | Add supplier CSV import | 90ee1dd |
 | 2025-12-08 | Add PO suggestion algorithm | bab1653 |
-| 2025-12-08 | Add Safety Stock algorithm | - |
+| 2025-12-08 | v0.1.0: Safety Stock, trend, README | ac54680 |
 
 ---
 
@@ -94,8 +94,9 @@ serenisoft-atum-enhancer/
 ├── serenisoft-atum-enhancer.php
 ├── composer.json
 ├── .gitignore
+├── README.md
+├── CHANGELOG.md
 ├── CLAUDE.md
-├── PROJECT_DESC.MD
 ├── classes/
 │   ├── Bootstrap.php
 │   ├── Settings/

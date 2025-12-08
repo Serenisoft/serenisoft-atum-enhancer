@@ -85,9 +85,38 @@ class Settings {
 			'group'   => self::TAB_KEY,
 			'section' => 'sae_po_suggestions',
 			'name'    => __( 'Enable Automatic Suggestions', 'serenisoft-atum-enhancer' ),
-			'desc'    => __( 'Automatically generate purchase order suggestions based on stock levels and sales patterns.', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Automatically generate purchase order suggestions daily based on stock levels and sales patterns.', 'serenisoft-atum-enhancer' ),
 			'type'    => 'switcher',
 			'default' => 'no',
+		);
+
+		$defaults['sae_cron_time'] = array(
+			'group'      => self::TAB_KEY,
+			'section'    => 'sae_po_suggestions',
+			'name'       => __( 'Scheduled Run Time', 'serenisoft-atum-enhancer' ),
+			'desc'       => __( 'Time of day to automatically generate PO suggestions (24h format, server time).', 'serenisoft-atum-enhancer' ),
+			'type'       => 'select',
+			'default'    => '06:00',
+			'options'    => array(
+				'values' => array(
+					'00:00' => '00:00',
+					'02:00' => '02:00',
+					'04:00' => '04:00',
+					'06:00' => '06:00',
+					'08:00' => '08:00',
+					'10:00' => '10:00',
+					'12:00' => '12:00',
+					'14:00' => '14:00',
+					'16:00' => '16:00',
+					'18:00' => '18:00',
+					'20:00' => '20:00',
+					'22:00' => '22:00',
+				),
+			),
+			'dependency' => array(
+				'field' => 'sae_enable_auto_suggestions',
+				'value' => 'yes',
+			),
 		);
 
 		$defaults['sae_generate_suggestions'] = array(

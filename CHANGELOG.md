@@ -2,6 +2,25 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.3.0] - 2025-12-08
+
+### Added
+- WP Cron integration for automatic daily PO generation
+- "Scheduled Run Time" setting to choose when automatic generation runs (00:00-22:00)
+- Automatic scheduling on plugin activation
+- Re-scheduling when settings are changed
+- Servebolt server-side cron compatibility
+
+### Changed
+- "Enable Automatic Suggestions" now triggers daily cron job instead of being inactive
+- Improved settings descriptions for clarity
+
+## [0.2.1] - 2025-12-08
+
+### Added
+- Per-supplier "Orders Per Year" override field on Supplier edit screen
+- New "Enhancer Settings" meta box on ATUM Suppliers
+
 ## [0.2.0] - 2025-12-08
 
 ### Added

@@ -5,10 +5,12 @@ Extends ATUM Inventory Management for WooCommerce with intelligent purchase orde
 ## Features
 
 ### Automatic PO Suggestions
+- **Daily Automatic Generation**: Schedule PO suggestions to run automatically at a specific time
 - Analyzes stock levels and sales history
 - Calculates optimal reorder points using industry-standard formulas
 - Creates draft Purchase Orders per supplier
 - Email notifications when suggestions are generated
+- Servebolt server-side cron compatible
 
 ### Smart Inventory Algorithms
 - **Safety Stock**: Prevents stockouts using statistical service levels (90%, 95%, 99%)
@@ -40,14 +42,18 @@ Extends ATUM Inventory Management for WooCommerce with intelligent purchase orde
 ## Configuration
 
 ### General Settings
-- **Notification Email**: Where to send PO suggestion alerts
-- **Enable Automatic Suggestions**: Toggle automatic generation
+- **Enable Automatic Suggestions**: Toggle automatic daily generation
+- **Scheduled Run Time**: Choose time of day for automatic generation (00:00-22:00, server time)
 
 ### Purchase Order Algorithm
 - **Default Orders Per Year**: How often to order from each supplier (1-12)
 - **Minimum Days Between Orders**: Prevents too frequent orders
 - **Service Level**: Target in-stock percentage (affects safety stock)
 - **Include Seasonal Analysis**: Adjust for monthly patterns
+
+### Per-Supplier Settings
+Each supplier can override the global default:
+- **Orders Per Year**: Found in "Enhancer Settings" meta box on Supplier edit screen
 
 ### Supplier Import
 Upload CSV files with semicolon-separated values:

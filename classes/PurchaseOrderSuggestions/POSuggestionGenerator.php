@@ -16,6 +16,8 @@ namespace SereniSoft\AtumEnhancer\PurchaseOrderSuggestions;
 defined( 'ABSPATH' ) || die;
 
 use SereniSoft\AtumEnhancer\Settings\Settings;
+use SereniSoft\AtumEnhancer\Suppliers\SupplierFields;
+use SereniSoft\AtumEnhancer\Products\ProductFields;
 use Atum\PurchaseOrders\Models\PurchaseOrder;
 use Atum\Suppliers\Supplier;
 use Atum\Suppliers\Suppliers;
@@ -30,6 +32,11 @@ class POSuggestionGenerator {
 	private static $instance;
 
 	/**
+	 * Cron hook name
+	 */
+	const CRON_HOOK = 'sae_daily_po_suggestions';
+
+	/**
 	 * POSuggestionGenerator constructor
 	 *
 	 * @since 1.0.0
@@ -38,6 +45,12 @@ class POSuggestionGenerator {
 
 		// Register AJAX handler for manual trigger.
 		add_action( 'wp_ajax_sae_generate_po_suggestions', array( $this, 'ajax_generate_suggestions' ) );
+
+		// Register cron hook.
+		add_action( self::CRON_HOOK, array( $this, 'run_scheduled_generation' ) );
+
+		// Re-schedule cron when settings change.
+		add_action( 'update_option_atum_settings', array( $this, 'maybe_reschedule_cron' ) );
 
 	}
 
@@ -180,6 +193,12 @@ class POSuggestionGenerator {
 				return new \WP_Error( 'po_create_failed', __( 'Failed to create Purchase Order.', 'serenisoft-atum-enhancer' ) );
 			}
 
+			// Add supplier PO note if set.
+			$supplier_note = SupplierFields::get_po_note( $supplier_id );
+			if ( ! empty( $supplier_note ) ) {
+				$po->add_order_note( $supplier_note );
+			}
+
 			// Add products to PO.
 			$total = 0;
 			foreach ( $products_to_reorder as $product_data ) {
@@ -192,7 +211,8 @@ class POSuggestionGenerator {
 				$qty   = $product_data['suggested_qty'];
 				$price = $product_data['purchase_price'];
 
-				$po->add_product(
+				// Add product to PO.
+				$item_id = $po->add_product(
 					$product,
 					$qty,
 					array(
@@ -200,6 +220,16 @@ class POSuggestionGenerator {
 						'total'    => $price * $qty,
 					)
 				);
+
+				// Add product PO note as item meta if set.
+				$product_note = ProductFields::get_po_note( $product_data['product_id'] );
+				if ( ! empty( $product_note ) && $item_id ) {
+					$item = $po->get_item( $item_id );
+					if ( $item ) {
+						$item->add_meta_data( __( 'Note', 'serenisoft-atum-enhancer' ), $product_note );
+						$item->save();
+					}
+				}
 
 				$total += $price * $qty;
 			}
@@ -280,6 +310,94 @@ class POSuggestionGenerator {
 		$message .= __( 'Please review these suggestions and update the quantities as needed.', 'serenisoft-atum-enhancer' );
 
 		wp_mail( $admin_email, $subject, $message );
+
+	}
+
+
+	/*******************
+	 * Cron methods
+	 *******************/
+
+	/**
+	 * Run scheduled generation (called by WP Cron)
+	 *
+	 * @since 1.0.0
+	 */
+	public function run_scheduled_generation() {
+
+		// Check if auto suggestions are enabled.
+		if ( 'yes' !== Settings::get( 'sae_enable_auto_suggestions', 'no' ) ) {
+			return;
+		}
+
+		// Run the generation.
+		$this->generate_suggestions();
+
+	}
+
+	/**
+	 * Schedule the cron job
+	 *
+	 * @since 1.0.0
+	 */
+	public function schedule_cron() {
+
+		// Unschedule first to avoid duplicates.
+		$this->unschedule_cron();
+
+		// Get configured time.
+		$time_setting = Settings::get( 'sae_cron_time', '06:00' );
+		list( $hour, $minute ) = explode( ':', $time_setting );
+
+		// Calculate next run time (today or tomorrow at the specified time).
+		$timestamp = strtotime( "today {$hour}:{$minute}" );
+		if ( $timestamp < time() ) {
+			$timestamp = strtotime( "tomorrow {$hour}:{$minute}" );
+		}
+
+		wp_schedule_event( $timestamp, 'daily', self::CRON_HOOK );
+
+	}
+
+	/**
+	 * Unschedule the cron job
+	 *
+	 * @since 1.0.0
+	 */
+	public function unschedule_cron() {
+
+		$timestamp = wp_next_scheduled( self::CRON_HOOK );
+		if ( $timestamp ) {
+			wp_unschedule_event( $timestamp, self::CRON_HOOK );
+		}
+
+	}
+
+	/**
+	 * Maybe reschedule cron when settings change
+	 *
+	 * @since 1.0.0
+	 */
+	public function maybe_reschedule_cron() {
+
+		if ( 'yes' === Settings::get( 'sae_enable_auto_suggestions', 'no' ) ) {
+			$this->schedule_cron();
+		} else {
+			$this->unschedule_cron();
+		}
+
+	}
+
+	/**
+	 * Check if cron is scheduled
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return bool|int False if not scheduled, timestamp if scheduled.
+	 */
+	public function is_cron_scheduled() {
+
+		return wp_next_scheduled( self::CRON_HOOK );
 
 	}
 

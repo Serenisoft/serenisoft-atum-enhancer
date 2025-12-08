@@ -16,6 +16,8 @@ defined( 'ABSPATH' ) || die;
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use SereniSoft\AtumEnhancer\Settings\Settings;
 use SereniSoft\AtumEnhancer\SupplierImport\SupplierImport;
+use SereniSoft\AtumEnhancer\Suppliers\SupplierFields;
+use SereniSoft\AtumEnhancer\Products\ProductFields;
 use SereniSoft\AtumEnhancer\PurchaseOrderSuggestions\POSuggestionGenerator;
 
 class Bootstrap {
@@ -88,6 +90,12 @@ class Bootstrap {
 
 		// Initialize Supplier Import.
 		SupplierImport::get_instance();
+
+		// Initialize Supplier Fields.
+		SupplierFields::get_instance();
+
+		// Initialize Product Fields.
+		ProductFields::get_instance();
 
 		// Initialize PO Suggestion Generator.
 		POSuggestionGenerator::get_instance();

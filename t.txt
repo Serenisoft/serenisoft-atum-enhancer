@@ -1,0 +1,24 @@
+<img src="http://kamerasenteret-test.test/wp-content/uploads/2023/05/Valtra-T-510x510-flip-247x247.jpg" alt="Landbruk" width="247" height="" srcset="http://kamerasenteret-test.test/wp-content/uploads/2023/05/Valtra-T-510x510-flip-247x247.jpg 247w, http://kamerasenteret-test.test/wp-content/uploads/2023/05/Valtra-T-510x510-flip-100x100.jpg 100w, http://kamerasenteret-test.test/wp-content/uploads/2023/05/Valtra-T-510x510-flip-300x300.jpg 300w, http://kamerasenteret-test.test/wp-content/uploads/2023/05/Valtra-T-510x510-flip-150x150.jpg 150w, http://kamerasenteret-test.test/wp-content/uploads/2023/05/Valtra-T-510x510-flip-460x460.jpg 460w, http://kamerasenteret-test.test/wp-content/uploads/2023/05/Valtra-T-510x510-flip-170x170.jpg 170w, http://kamerasenteret-test.test/wp-content/uploads/2023/05/Valtra-T-510x510-flip-416x416.jpg 416w, http://kamerasenteret-test.test/wp-content/uploads/2023/05/Valtra-T-510x510-flip.jpg 508w" sizes="(max-width: 247px) 100vw, 247px">
+
+PS C:\Users\Thomas\Local Sites\kamerasenteret-test\app\public\wp-content\uploads\2023\05> dir Valtra-T-510*.jpg
+
+
+    Directory: C:\Users\Thomas\Local Sites\kamerasenteret-test\app\public\wp-content\uploads\2023\05
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----        28.11.2025     20:44          19522 Valtra-T-510x510-1-100x100.jpg
+-a----        28.11.2025     20:44          22543 Valtra-T-510x510-1-150x150.jpg
+-a----        28.11.2025     20:44          24096 Valtra-T-510x510-1-170x170.jpg
+-a----        28.11.2025     20:44          30703 Valtra-T-510x510-1-247x247.jpg
+-a----        28.11.2025     20:44          36457 Valtra-T-510x510-1-300x300.jpg
+-a----        28.11.2025     20:44          56804 Valtra-T-510x510-1-460x460.jpg
+-a----        28.11.2025     20:44          78334 Valtra-T-510x510-1.jpg
+-a----        28.11.2025     20:44          19513 Valtra-T-510x510-flip-100x100.jpg
+-a----        28.11.2025     20:44          22588 Valtra-T-510x510-flip-150x150.jpg
+-a----        28.11.2025     20:44          24108 Valtra-T-510x510-flip-170x170.jpg
+-a----        28.11.2025     20:44          30674 Valtra-T-510x510-flip-247x247.jpg
+-a----        28.11.2025     20:44          36494 Valtra-T-510x510-flip-300x300.jpg
+-a----        28.11.2025     20:44          57091 Valtra-T-510x510-flip-460x460.jpg
+-a----        28.11.2025     20:44          78303 Valtra-T-510x510-flip.jpg
