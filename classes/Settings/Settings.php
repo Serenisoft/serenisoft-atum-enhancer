@@ -97,6 +97,18 @@ class Settings {
 			'default' => 'no',
 		);
 
+		$defaults['sae_generate_suggestions'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'general',
+			'name'    => __( 'Generate PO Suggestions', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Manually trigger the generation of Purchase Order suggestions.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'html',
+			'default' => '',
+			'options' => array(
+				'html' => $this->get_generate_button_html(),
+			),
+		);
+
 		// Purchase Order Algorithm Settings.
 		$defaults['sae_default_orders_per_year'] = array(
 			'group'   => self::TAB_KEY,
@@ -235,6 +247,85 @@ class Settings {
 						$btn.prop('disabled', false);
 						$spinner.removeClass('is-active');
 						$result.html('<div class="notice notice-error"><p><?php echo esc_js( __( 'An error occurred during import.', 'serenisoft-atum-enhancer' ) ); ?></p></div>');
+					}
+				});
+			});
+		});
+		</script>
+		<?php
+		return ob_get_clean();
+
+	}
+
+	/**
+	 * Get the generate button HTML
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string HTML for the generate button.
+	 */
+	private function get_generate_button_html() {
+
+		$nonce = wp_create_nonce( 'sae_generate_po_suggestions' );
+
+		ob_start();
+		?>
+		<div class="sae-generate-form">
+			<button type="button" class="button button-primary" id="sae-generate-btn">
+				<?php esc_html_e( 'Generate PO Suggestions Now', 'serenisoft-atum-enhancer' ); ?>
+			</button>
+			<span class="spinner" style="float: none; margin-top: 0;"></span>
+			<div id="sae-generate-result" style="margin-top: 10px;"></div>
+		</div>
+		<script type="text/javascript">
+		jQuery(document).ready(function($) {
+			$('#sae-generate-btn').on('click', function() {
+				if (!confirm('<?php echo esc_js( __( 'This will analyze all products and create draft POs for suppliers. Continue?', 'serenisoft-atum-enhancer' ) ); ?>')) {
+					return;
+				}
+
+				var $btn = $(this);
+				var $spinner = $btn.next('.spinner');
+				var $result = $('#sae-generate-result');
+
+				$btn.prop('disabled', true);
+				$spinner.addClass('is-active');
+				$result.html('');
+
+				$.ajax({
+					url: ajaxurl,
+					type: 'POST',
+					data: {
+						action: 'sae_generate_po_suggestions',
+						nonce: '<?php echo esc_js( $nonce ); ?>'
+					},
+					success: function(response) {
+						$btn.prop('disabled', false);
+						$spinner.removeClass('is-active');
+
+						if (response.success) {
+							var html = '<div class="notice notice-success"><p>' + response.data.message + '</p>';
+							if (response.data.created && response.data.created.length) {
+								html += '<ul>';
+								response.data.created.forEach(function(po) {
+									html += '<li><a href="' + po.edit_url + '" target="_blank">' + po.supplier_name + '</a> - ' + po.items_count + ' <?php echo esc_js( __( 'items', 'serenisoft-atum-enhancer' ) ); ?></li>';
+								});
+								html += '</ul>';
+							}
+							html += '</div>';
+							$result.html(html);
+
+							if (response.data.errors && response.data.errors.length) {
+								$result.append('<div class="notice notice-warning"><p><strong><?php echo esc_js( __( 'Errors:', 'serenisoft-atum-enhancer' ) ); ?></strong><br>' + response.data.errors.join('<br>') + '</p></div>');
+							}
+						} else {
+							$result.html('<div class="notice notice-error"><p>' + response.data.message + '</p></div>');
+						}
+					},
+					error: function() {
+						$btn.prop('disabled', false);
+						$spinner.removeClass('is-active');
+						$result.html('<div class="notice notice-error"><p><?php echo esc_js( __( 'An error occurred during generation.', 'serenisoft-atum-enhancer' ) ); ?></p></div>');
 					}
 				});
 			});
