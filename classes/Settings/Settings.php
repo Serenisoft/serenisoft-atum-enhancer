@@ -40,6 +40,9 @@ class Settings {
 		// Add settings fields to ATUM.
 		add_filter( 'atum/settings/defaults', array( $this, 'add_settings_defaults' ) );
 
+		// Inject HTML for generate button.
+		add_filter( 'atum/settings/display_html', array( $this, 'display_generate_button' ), 10, 2 );
+
 	}
 
 	/**
@@ -57,9 +60,8 @@ class Settings {
 			'label'    => __( 'Enhancer', 'serenisoft-atum-enhancer' ),
 			'icon'     => 'atmi-star',
 			'sections' => array(
-				'general'         => __( 'General Settings', 'serenisoft-atum-enhancer' ),
-				'po_algorithm'    => __( 'Purchase Order Algorithm', 'serenisoft-atum-enhancer' ),
-				'supplier_import' => __( 'Supplier Import', 'serenisoft-atum-enhancer' ),
+				'sae_po_suggestions' => __( 'PO Suggestions', 'serenisoft-atum-enhancer' ),
+				'sae_supplier_import' => __( 'Supplier Import', 'serenisoft-atum-enhancer' ),
 			),
 		);
 
@@ -78,19 +80,10 @@ class Settings {
 	 */
 	public function add_settings_defaults( $defaults ) {
 
-		// General Settings.
-		$defaults['sae_admin_email'] = array(
-			'group'   => self::TAB_KEY,
-			'section' => 'general',
-			'name'    => __( 'Notification Email', 'serenisoft-atum-enhancer' ),
-			'desc'    => __( 'Email address for purchase order suggestion notifications. Defaults to admin email.', 'serenisoft-atum-enhancer' ),
-			'type'    => 'text',
-			'default' => get_option( 'admin_email' ),
-		);
-
+		// PO Suggestions Settings.
 		$defaults['sae_enable_auto_suggestions'] = array(
 			'group'   => self::TAB_KEY,
-			'section' => 'general',
+			'section' => 'sae_po_suggestions',
 			'name'    => __( 'Enable Automatic Suggestions', 'serenisoft-atum-enhancer' ),
 			'desc'    => __( 'Automatically generate purchase order suggestions based on stock levels and sales patterns.', 'serenisoft-atum-enhancer' ),
 			'type'    => 'switcher',
@@ -98,21 +91,17 @@ class Settings {
 		);
 
 		$defaults['sae_generate_suggestions'] = array(
-			'group'   => self::TAB_KEY,
-			'section' => 'general',
-			'name'    => __( 'Generate PO Suggestions', 'serenisoft-atum-enhancer' ),
-			'desc'    => __( 'Manually trigger the generation of Purchase Order suggestions.', 'serenisoft-atum-enhancer' ),
-			'type'    => 'html',
-			'default' => '',
-			'options' => array(
-				'html' => $this->get_generate_button_html(),
-			),
+			'group'    => self::TAB_KEY,
+			'section'  => 'sae_po_suggestions',
+			'name'     => __( 'Generate PO Suggestions', 'serenisoft-atum-enhancer' ),
+			'desc'     => __( 'Manually trigger the generation of Purchase Order suggestions.', 'serenisoft-atum-enhancer' ),
+			'type'     => 'html',
+			'default'  => $this->get_generate_button_html(),
 		);
 
-		// Purchase Order Algorithm Settings.
 		$defaults['sae_default_orders_per_year'] = array(
 			'group'   => self::TAB_KEY,
-			'section' => 'po_algorithm',
+			'section' => 'sae_po_suggestions',
 			'name'    => __( 'Default Orders Per Year', 'serenisoft-atum-enhancer' ),
 			'desc'    => __( 'Default number of orders per year per supplier. Can be overridden per supplier.', 'serenisoft-atum-enhancer' ),
 			'type'    => 'number',
@@ -126,7 +115,7 @@ class Settings {
 
 		$defaults['sae_min_days_before_reorder'] = array(
 			'group'   => self::TAB_KEY,
-			'section' => 'po_algorithm',
+			'section' => 'sae_po_suggestions',
 			'name'    => __( 'Minimum Days Between Orders', 'serenisoft-atum-enhancer' ),
 			'desc'    => __( 'Minimum number of days that must pass before a new order suggestion is created for the same supplier.', 'serenisoft-atum-enhancer' ),
 			'type'    => 'number',
@@ -140,7 +129,7 @@ class Settings {
 
 		$defaults['sae_stock_threshold_percent'] = array(
 			'group'   => self::TAB_KEY,
-			'section' => 'po_algorithm',
+			'section' => 'sae_po_suggestions',
 			'name'    => __( 'Stock Threshold (%)', 'serenisoft-atum-enhancer' ),
 			'desc'    => __( 'When stock falls below this percentage of optimal level, include product in suggestions.', 'serenisoft-atum-enhancer' ),
 			'type'    => 'number',
@@ -154,7 +143,7 @@ class Settings {
 
 		$defaults['sae_include_seasonal_analysis'] = array(
 			'group'   => self::TAB_KEY,
-			'section' => 'po_algorithm',
+			'section' => 'sae_po_suggestions',
 			'name'    => __( 'Include Seasonal Analysis', 'serenisoft-atum-enhancer' ),
 			'desc'    => __( 'Analyze historical sales data to adjust reorder quantities based on seasonal patterns.', 'serenisoft-atum-enhancer' ),
 			'type'    => 'switcher',
@@ -163,16 +152,16 @@ class Settings {
 
 		$defaults['sae_service_level'] = array(
 			'group'   => self::TAB_KEY,
-			'section' => 'po_algorithm',
+			'section' => 'sae_po_suggestions',
 			'name'    => __( 'Service Level', 'serenisoft-atum-enhancer' ),
 			'desc'    => __( 'How often you want products to be in stock. 95% means you accept being out of stock ~18 days/year. Higher = more safety stock = less stockouts, but more capital tied up in inventory.', 'serenisoft-atum-enhancer' ),
 			'type'    => 'select',
 			'default' => '95',
 			'options' => array(
-				'options' => array(
-					'90' => __( '90% - Out of stock ~36 days/year (minimal safety stock)', 'serenisoft-atum-enhancer' ),
-					'95' => __( '95% - Out of stock ~18 days/year (recommended)', 'serenisoft-atum-enhancer' ),
-					'99' => __( '99% - Out of stock ~4 days/year (maximum safety)', 'serenisoft-atum-enhancer' ),
+				'values' => array(
+					'90' => __( '90% - Minimal safety stock', 'serenisoft-atum-enhancer' ),
+					'95' => __( '95% - Recommended', 'serenisoft-atum-enhancer' ),
+					'99' => __( '99% - Maximum safety', 'serenisoft-atum-enhancer' ),
 				),
 			),
 		);
@@ -180,14 +169,11 @@ class Settings {
 		// Supplier Import Settings.
 		$defaults['sae_supplier_import'] = array(
 			'group'   => self::TAB_KEY,
-			'section' => 'supplier_import',
+			'section' => 'sae_supplier_import',
 			'name'    => __( 'Import Suppliers from CSV', 'serenisoft-atum-enhancer' ),
 			'desc'    => __( 'Upload a CSV file with supplier data. Duplicates (by code or name) will be skipped.', 'serenisoft-atum-enhancer' ),
 			'type'    => 'html',
 			'default' => '',
-			'options' => array(
-				'html' => $this->get_import_form_html(),
-			),
 		);
 
 		return $defaults;
@@ -212,33 +198,56 @@ class Settings {
 				<?php esc_html_e( 'CSV format: Semicolon-separated with columns: Leverandørnummer, Navn, Organisasjonsnummer, Telefonnummer, Faksnummer, E-postadresse, Postadresse, Postnr., Sted, Land', 'serenisoft-atum-enhancer' ); ?>
 			</p>
 			<input type="file" id="sae-csv-file" accept=".csv" />
-			<button type="button" class="button button-primary" id="sae-import-btn">
-				<?php esc_html_e( 'Import Suppliers', 'serenisoft-atum-enhancer' ); ?>
+			<button type="button" class="button" id="sae-preview-btn">
+				<?php esc_html_e( 'Preview', 'serenisoft-atum-enhancer' ); ?>
 			</button>
 			<span class="spinner" style="float: none; margin-top: 0;"></span>
+			<div id="sae-preview-result" style="margin-top: 10px;"></div>
+			<div id="sae-import-actions" style="margin-top: 10px; display: none;">
+				<button type="button" class="button button-primary" id="sae-import-btn">
+					<?php esc_html_e( 'Import', 'serenisoft-atum-enhancer' ); ?>
+				</button>
+				<button type="button" class="button" id="sae-cancel-btn">
+					<?php esc_html_e( 'Cancel', 'serenisoft-atum-enhancer' ); ?>
+				</button>
+			</div>
 			<div id="sae-import-result" style="margin-top: 10px;"></div>
 		</div>
+		<style>
+		.sae-preview-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+		.sae-preview-table th, .sae-preview-table td { padding: 8px; text-align: left; border: 1px solid #ddd; }
+		.sae-preview-table th { background: #f5f5f5; }
+		.sae-status-import { color: #46b450; }
+		.sae-status-skip { color: #ffb900; }
+		.sae-status-error { color: #dc3232; }
+		</style>
 		<script type="text/javascript">
 		jQuery(document).ready(function($) {
-			$('#sae-import-btn').on('click', function() {
+			var selectedFile = null;
+
+			// Preview button click
+			$('#sae-preview-btn').on('click', function() {
 				var fileInput = $('#sae-csv-file')[0];
 				if (!fileInput.files.length) {
 					alert('<?php echo esc_js( __( 'Please select a CSV file.', 'serenisoft-atum-enhancer' ) ); ?>');
 					return;
 				}
 
+				selectedFile = fileInput.files[0];
 				var formData = new FormData();
-				formData.append('action', 'sae_import_suppliers');
+				formData.append('action', 'sae_preview_suppliers');
 				formData.append('nonce', '<?php echo esc_js( $nonce ); ?>');
-				formData.append('csv_file', fileInput.files[0]);
+				formData.append('csv_file', selectedFile);
 
 				var $btn = $(this);
 				var $spinner = $btn.next('.spinner');
-				var $result = $('#sae-import-result');
+				var $preview = $('#sae-preview-result');
 
 				$btn.prop('disabled', true);
 				$spinner.addClass('is-active');
-				$result.html('');
+				$preview.html('');
+				$('#sae-import-actions').hide();
+				$('#sae-import-result').html('');
 
 				$.ajax({
 					url: ajaxurl,
@@ -251,7 +260,87 @@ class Settings {
 						$spinner.removeClass('is-active');
 
 						if (response.success) {
+							var data = response.data;
+							var html = '<p><strong><?php echo esc_js( __( 'Preview:', 'serenisoft-atum-enhancer' ) ); ?></strong> ';
+							html += data.will_import + ' <?php echo esc_js( __( 'will be imported', 'serenisoft-atum-enhancer' ) ); ?>, ';
+							html += data.will_skip + ' <?php echo esc_js( __( 'will be skipped', 'serenisoft-atum-enhancer' ) ); ?></p>';
+
+							html += '<table class="sae-preview-table"><thead><tr>';
+							html += '<th><?php echo esc_js( __( 'Code', 'serenisoft-atum-enhancer' ) ); ?></th>';
+							html += '<th><?php echo esc_js( __( 'Name', 'serenisoft-atum-enhancer' ) ); ?></th>';
+							html += '<th><?php echo esc_js( __( 'Status', 'serenisoft-atum-enhancer' ) ); ?></th>';
+							html += '</tr></thead><tbody>';
+
+							data.rows.forEach(function(row) {
+								var statusClass = 'sae-status-' + row.status;
+								var statusText = row.status === 'import' ? '<?php echo esc_js( __( 'Will import', 'serenisoft-atum-enhancer' ) ); ?>' : row.reason;
+								html += '<tr><td>' + (row.code || '-') + '</td>';
+								html += '<td>' + (row.name || '-') + '</td>';
+								html += '<td class="' + statusClass + '">' + statusText + '</td></tr>';
+							});
+
+							html += '</tbody></table>';
+							$preview.html(html);
+
+							if (data.will_import > 0) {
+								$('#sae-import-actions').show();
+							}
+						} else {
+							$preview.html('<div class="notice notice-error"><p>' + response.data.message + '</p></div>');
+						}
+					},
+					error: function() {
+						$btn.prop('disabled', false);
+						$spinner.removeClass('is-active');
+						$preview.html('<div class="notice notice-error"><p><?php echo esc_js( __( 'An error occurred during preview.', 'serenisoft-atum-enhancer' ) ); ?></p></div>');
+					}
+				});
+			});
+
+			// Cancel button click
+			$('#sae-cancel-btn').on('click', function() {
+				$('#sae-preview-result').html('');
+				$('#sae-import-actions').hide();
+				$('#sae-csv-file').val('');
+				selectedFile = null;
+			});
+
+			// Import button click
+			$('#sae-import-btn').on('click', function() {
+				if (!selectedFile) {
+					alert('<?php echo esc_js( __( 'Please preview the file first.', 'serenisoft-atum-enhancer' ) ); ?>');
+					return;
+				}
+
+				var formData = new FormData();
+				formData.append('action', 'sae_import_suppliers');
+				formData.append('nonce', '<?php echo esc_js( $nonce ); ?>');
+				formData.append('csv_file', selectedFile);
+
+				var $btn = $(this);
+				var $result = $('#sae-import-result');
+
+				$btn.prop('disabled', true);
+				$('#sae-cancel-btn').prop('disabled', true);
+				$result.html('<p><?php echo esc_js( __( 'Importing...', 'serenisoft-atum-enhancer' ) ); ?></p>');
+
+				$.ajax({
+					url: ajaxurl,
+					type: 'POST',
+					data: formData,
+					processData: false,
+					contentType: false,
+					success: function(response) {
+						$btn.prop('disabled', false);
+						$('#sae-cancel-btn').prop('disabled', false);
+
+						if (response.success) {
 							$result.html('<div class="notice notice-success"><p>' + response.data.message + '</p></div>');
+							$('#sae-preview-result').html('');
+							$('#sae-import-actions').hide();
+							$('#sae-csv-file').val('');
+							selectedFile = null;
+
 							if (response.data.errors && response.data.errors.length) {
 								$result.append('<div class="notice notice-warning"><p><strong><?php echo esc_js( __( 'Errors:', 'serenisoft-atum-enhancer' ) ); ?></strong><br>' + response.data.errors.join('<br>') + '</p></div>');
 							}
@@ -261,7 +350,7 @@ class Settings {
 					},
 					error: function() {
 						$btn.prop('disabled', false);
-						$spinner.removeClass('is-active');
+						$('#sae-cancel-btn').prop('disabled', false);
 						$result.html('<div class="notice notice-error"><p><?php echo esc_js( __( 'An error occurred during import.', 'serenisoft-atum-enhancer' ) ); ?></p></div>');
 					}
 				});
@@ -349,6 +438,30 @@ class Settings {
 		</script>
 		<?php
 		return ob_get_clean();
+
+	}
+
+	/**
+	 * Display the generate button for HTML field
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $output Current output.
+	 * @param array  $args   Field arguments.
+	 *
+	 * @return string Modified output.
+	 */
+	public function display_generate_button( $output, $args ) {
+
+		if ( 'sae_generate_suggestions' === $args['id'] ) {
+			return $this->get_generate_button_html();
+		}
+
+		if ( 'sae_supplier_import' === $args['id'] ) {
+			return $this->get_import_form_html();
+		}
+
+		return $output;
 
 	}
 

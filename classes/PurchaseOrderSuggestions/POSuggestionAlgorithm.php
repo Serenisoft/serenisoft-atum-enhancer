@@ -96,6 +96,12 @@ class POSuggestionAlgorithm {
 		$product_id    = $product->get_id();
 		$current_stock = (int) $product->get_stock_quantity();
 
+		// Get inbound stock (already ordered, waiting to arrive).
+		$inbound_stock = self::get_inbound_stock( $product );
+
+		// Effective stock = what we have + what's coming.
+		$effective_stock = $current_stock + $inbound_stock;
+
 		// Get average daily sales.
 		$avg_daily_sales = self::get_average_daily_sales( $product_id, $use_seasonal );
 
@@ -108,20 +114,22 @@ class POSuggestionAlgorithm {
 		// Calculate optimal stock level (for full order cycle).
 		$optimal_stock = ceil( $avg_daily_sales * $days_of_stock_target ) + $safety_stock;
 
-		// Calculate days of stock remaining.
-		$days_remaining = $avg_daily_sales > 0 ? floor( $current_stock / $avg_daily_sales ) : 999;
+		// Calculate days of stock remaining (based on effective stock).
+		$days_remaining = $avg_daily_sales > 0 ? floor( $effective_stock / $avg_daily_sales ) : 999;
 
-		// Determine if reorder is needed when stock falls to or below reorder point.
-		$needs_reorder = $current_stock <= $reorder_point && $avg_daily_sales > 0;
+		// Determine if reorder is needed when effective stock falls to or below reorder point.
+		$needs_reorder = $effective_stock <= $reorder_point && $avg_daily_sales > 0;
 
 		// Calculate suggested quantity to bring stock up to optimal level.
-		$suggested_qty = $needs_reorder ? max( 1, $optimal_stock - $current_stock ) : 0;
+		$suggested_qty = $needs_reorder ? max( 1, $optimal_stock - $effective_stock ) : 0;
 
 		return array(
 			'product_id'       => $product_id,
 			'product_name'     => $product->get_name(),
 			'sku'              => $product->get_sku(),
 			'current_stock'    => $current_stock,
+			'inbound_stock'    => $inbound_stock,
+			'effective_stock'  => $effective_stock,
 			'avg_daily_sales'  => round( $avg_daily_sales, 2 ),
 			'safety_stock'     => $safety_stock,
 			'reorder_point'    => $reorder_point,
@@ -131,6 +139,32 @@ class POSuggestionAlgorithm {
 			'needs_reorder'    => $needs_reorder,
 			'purchase_price'   => self::get_purchase_price( $product ),
 		);
+
+	}
+
+	/**
+	 * Get inbound stock for a product (from pending POs)
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param \WC_Product $product Product object.
+	 *
+	 * @return int Inbound stock quantity.
+	 */
+	public static function get_inbound_stock( $product ) {
+
+		// Use ATUM's helper if available.
+		if ( class_exists( '\Atum\Inc\Helpers' ) && method_exists( '\Atum\Inc\Helpers', 'get_product_inbound_stock' ) ) {
+			return (int) \Atum\Inc\Helpers::get_product_inbound_stock( $product );
+		}
+
+		// Fallback: check if product has the method directly.
+		if ( method_exists( $product, 'get_inbound_stock' ) ) {
+			$inbound = $product->get_inbound_stock();
+			return ! is_null( $inbound ) ? (int) $inbound : 0;
+		}
+
+		return 0;
 
 	}
 
@@ -183,11 +217,21 @@ class POSuggestionAlgorithm {
 		// Use actual sales period, not always 365 days.
 		$avg_daily = $total_sales / $days_of_history;
 
+		// Store original for combined adjustment cap.
+		$original_avg = $avg_daily;
+
 		// Apply trend adjustment for growing/declining sales.
 		$avg_daily = self::apply_trend_adjustment( $product_id, $avg_daily, $days_of_history );
 
 		if ( $use_seasonal ) {
 			$avg_daily = self::apply_seasonal_adjustment( $product_id, $avg_daily );
+		}
+
+		// Cap combined adjustment to prevent extreme values (0.4x to 2.5x).
+		if ( $original_avg > 0 ) {
+			$min_avg = $original_avg * 0.4;
+			$max_avg = $original_avg * 2.5;
+			$avg_daily = max( $min_avg, min( $max_avg, $avg_daily ) );
 		}
 
 		return $avg_daily;

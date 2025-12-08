@@ -15,9 +15,11 @@ Extends ATUM Inventory Management for WooCommerce with intelligent purchase orde
 - **Trend Detection**: Adjusts for growing or declining sales patterns
 - **Seasonal Analysis**: Considers monthly sales variations
 - **Dynamic History**: Handles new products with limited sales data
+- **Inbound Stock Awareness**: Accounts for quantities already on order in pending POs
 
 ### Supplier Import
 - CSV import for bulk supplier creation
+- **Preview before import**: See what will be imported/skipped before committing
 - Norwegian column format support
 - Duplicate detection by code or name
 

@@ -2,6 +2,15 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.2.0] - 2025-12-08
+
+### Added
+- CSV import preview - see data before importing with status per row
+- Inbound stock awareness - algorithm accounts for quantities already on order
+
+### Fixed
+- Algorithm now subtracts pending PO quantities from suggested order amounts
+
 ## [0.1.0] - 2025-12-08
 
 ### Added
@@ -22,3 +31,4 @@ All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 - Safety Stock = Z x σ(Demand) x √Lead Time
 - Trend adjustment: 70% recent sales, 30% historical
 - Handles products with limited sales history
+- Accounts for inbound stock from pending purchase orders

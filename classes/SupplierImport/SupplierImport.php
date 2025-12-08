@@ -64,8 +64,50 @@ class SupplierImport {
 	 */
 	private function __construct() {
 
-		// Register AJAX handler for import.
+		// Register AJAX handlers.
+		add_action( 'wp_ajax_sae_preview_suppliers', array( $this, 'ajax_preview_suppliers' ) );
 		add_action( 'wp_ajax_sae_import_suppliers', array( $this, 'ajax_import_suppliers' ) );
+
+	}
+
+	/**
+	 * AJAX handler for supplier preview
+	 *
+	 * @since 1.0.0
+	 */
+	public function ajax_preview_suppliers() {
+
+		// Check nonce.
+		if ( ! check_ajax_referer( 'sae_import_suppliers', 'nonce', false ) ) {
+			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Check permissions.
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to import suppliers.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Check if file was uploaded.
+		if ( empty( $_FILES['csv_file'] ) || empty( $_FILES['csv_file']['tmp_name'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'No file uploaded.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		$file = $_FILES['csv_file']['tmp_name'];
+
+		// Validate file type.
+		$file_type = wp_check_filetype( $_FILES['csv_file']['name'] );
+		if ( 'csv' !== $file_type['ext'] && 'text/csv' !== $file_type['type'] ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid file type. Please upload a CSV file.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Analyze the CSV file without importing.
+		$result = $this->analyze_csv( $file );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		wp_send_json_success( $result );
 
 	}
 
@@ -182,6 +224,113 @@ class SupplierImport {
 				$imported,
 				$skipped
 			),
+		);
+
+	}
+
+	/**
+	 * Analyze CSV file without importing (for preview)
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $file Path to CSV file.
+	 *
+	 * @return array|WP_Error Analysis result or error.
+	 */
+	public function analyze_csv( $file ) {
+
+		$handle = fopen( $file, 'r' );
+		if ( false === $handle ) {
+			return new \WP_Error( 'file_read_error', __( 'Could not read the CSV file.', 'serenisoft-atum-enhancer' ) );
+		}
+
+		// Read header row.
+		$header = fgetcsv( $handle, 0, self::CSV_DELIMITER );
+		if ( false === $header ) {
+			fclose( $handle );
+			return new \WP_Error( 'invalid_csv', __( 'Invalid CSV file format.', 'serenisoft-atum-enhancer' ) );
+		}
+
+		// Clean BOM from first column if present.
+		$header[0] = preg_replace( '/^\xEF\xBB\xBF/', '', $header[0] );
+
+		// Build column index map.
+		$column_indices = $this->build_column_indices( $header );
+
+		$rows        = array();
+		$will_import = 0;
+		$will_skip   = 0;
+		$row_num     = 1;
+
+		while ( ( $row = fgetcsv( $handle, 0, self::CSV_DELIMITER ) ) !== false ) {
+			$row_num++;
+
+			// Skip empty rows.
+			if ( empty( array_filter( $row ) ) ) {
+				continue;
+			}
+
+			$row_data = $this->analyze_supplier_row( $row, $column_indices );
+
+			if ( 'import' === $row_data['status'] ) {
+				$will_import++;
+			} else {
+				$will_skip++;
+			}
+
+			$rows[] = $row_data;
+		}
+
+		fclose( $handle );
+
+		return array(
+			'rows'        => $rows,
+			'will_import' => $will_import,
+			'will_skip'   => $will_skip,
+			'total'       => count( $rows ),
+		);
+
+	}
+
+	/**
+	 * Analyze a single supplier row (without importing)
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $row            CSV row data.
+	 * @param array $column_indices Column indices.
+	 *
+	 * @return array Row analysis with status.
+	 */
+	private function analyze_supplier_row( $row, $column_indices ) {
+
+		// Get supplier name.
+		$name = isset( $column_indices['name'] ) && isset( $row[ $column_indices['name'] ] )
+			? trim( $row[ $column_indices['name'] ] )
+			: '';
+
+		// Get supplier code.
+		$code = isset( $column_indices['code'] ) && isset( $row[ $column_indices['code'] ] )
+			? trim( $row[ $column_indices['code'] ] )
+			: '';
+
+		// Determine status.
+		$status = 'import';
+		$reason = '';
+
+		if ( empty( $name ) ) {
+			$status = 'error';
+			$reason = __( 'Missing name', 'serenisoft-atum-enhancer' );
+		} elseif ( $this->supplier_exists( $code, $name ) ) {
+			$status = 'skip';
+			$reason = __( 'Duplicate', 'serenisoft-atum-enhancer' );
+		}
+
+		return array(
+			'code'   => $code,
+			'name'   => $name,
+			'status' => $status,
+			'reason' => $reason,
 		);
 
 	}
