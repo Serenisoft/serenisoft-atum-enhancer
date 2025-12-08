@@ -57,8 +57,9 @@ class Settings {
 			'label'    => __( 'Enhancer', 'serenisoft-atum-enhancer' ),
 			'icon'     => 'atmi-star',
 			'sections' => array(
-				'general'      => __( 'General Settings', 'serenisoft-atum-enhancer' ),
-				'po_algorithm' => __( 'Purchase Order Algorithm', 'serenisoft-atum-enhancer' ),
+				'general'         => __( 'General Settings', 'serenisoft-atum-enhancer' ),
+				'po_algorithm'    => __( 'Purchase Order Algorithm', 'serenisoft-atum-enhancer' ),
+				'supplier_import' => __( 'Supplier Import', 'serenisoft-atum-enhancer' ),
 			),
 		);
 
@@ -148,7 +149,99 @@ class Settings {
 			'default' => 'yes',
 		);
 
+		// Supplier Import Settings.
+		$defaults['sae_supplier_import'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'supplier_import',
+			'name'    => __( 'Import Suppliers from CSV', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Upload a CSV file with supplier data. Duplicates (by code or name) will be skipped.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'html',
+			'default' => '',
+			'options' => array(
+				'html' => $this->get_import_form_html(),
+			),
+		);
+
 		return $defaults;
+
+	}
+
+	/**
+	 * Get the import form HTML
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string HTML for the import form.
+	 */
+	private function get_import_form_html() {
+
+		$nonce = wp_create_nonce( 'sae_import_suppliers' );
+
+		ob_start();
+		?>
+		<div class="sae-import-form">
+			<p class="description">
+				<?php esc_html_e( 'CSV format: Semicolon-separated with columns: Leverandørnummer, Navn, Organisasjonsnummer, Telefonnummer, Faksnummer, E-postadresse, Postadresse, Postnr., Sted, Land', 'serenisoft-atum-enhancer' ); ?>
+			</p>
+			<input type="file" id="sae-csv-file" accept=".csv" />
+			<button type="button" class="button button-primary" id="sae-import-btn">
+				<?php esc_html_e( 'Import Suppliers', 'serenisoft-atum-enhancer' ); ?>
+			</button>
+			<span class="spinner" style="float: none; margin-top: 0;"></span>
+			<div id="sae-import-result" style="margin-top: 10px;"></div>
+		</div>
+		<script type="text/javascript">
+		jQuery(document).ready(function($) {
+			$('#sae-import-btn').on('click', function() {
+				var fileInput = $('#sae-csv-file')[0];
+				if (!fileInput.files.length) {
+					alert('<?php echo esc_js( __( 'Please select a CSV file.', 'serenisoft-atum-enhancer' ) ); ?>');
+					return;
+				}
+
+				var formData = new FormData();
+				formData.append('action', 'sae_import_suppliers');
+				formData.append('nonce', '<?php echo esc_js( $nonce ); ?>');
+				formData.append('csv_file', fileInput.files[0]);
+
+				var $btn = $(this);
+				var $spinner = $btn.next('.spinner');
+				var $result = $('#sae-import-result');
+
+				$btn.prop('disabled', true);
+				$spinner.addClass('is-active');
+				$result.html('');
+
+				$.ajax({
+					url: ajaxurl,
+					type: 'POST',
+					data: formData,
+					processData: false,
+					contentType: false,
+					success: function(response) {
+						$btn.prop('disabled', false);
+						$spinner.removeClass('is-active');
+
+						if (response.success) {
+							$result.html('<div class="notice notice-success"><p>' + response.data.message + '</p></div>');
+							if (response.data.errors && response.data.errors.length) {
+								$result.append('<div class="notice notice-warning"><p><strong><?php echo esc_js( __( 'Errors:', 'serenisoft-atum-enhancer' ) ); ?></strong><br>' + response.data.errors.join('<br>') + '</p></div>');
+							}
+						} else {
+							$result.html('<div class="notice notice-error"><p>' + response.data.message + '</p></div>');
+						}
+					},
+					error: function() {
+						$btn.prop('disabled', false);
+						$spinner.removeClass('is-active');
+						$result.html('<div class="notice notice-error"><p><?php echo esc_js( __( 'An error occurred during import.', 'serenisoft-atum-enhancer' ) ); ?></p></div>');
+					}
+				});
+			});
+		});
+		</script>
+		<?php
+		return ob_get_clean();
 
 	}
 

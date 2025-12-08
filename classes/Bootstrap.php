@@ -15,6 +15,7 @@ defined( 'ABSPATH' ) || die;
 
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use SereniSoft\AtumEnhancer\Settings\Settings;
+use SereniSoft\AtumEnhancer\SupplierImport\SupplierImport;
 
 class Bootstrap {
 
@@ -83,6 +84,9 @@ class Bootstrap {
 
 		// Initialize Settings.
 		Settings::get_instance();
+
+		// Initialize Supplier Import.
+		SupplierImport::get_instance();
 
 	}
 
