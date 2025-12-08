@@ -1,0 +1,20 @@
+{
+	"name": "serenisoft/atum-enhancer",
+	"description": "Extends ATUM Inventory Management with automatic purchase order suggestions",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"minimum-stability": "stable",
+	"prefer-stable": true,
+	"config": {
+		"preferred-install": "dist",
+		"platform-check": false
+	},
+	"require": {
+		"php": ">=7.4"
+	},
+	"autoload": {
+		"psr-4": {
+			"SereniSoft\\AtumEnhancer\\": "classes/"
+		}
+	}
+}
