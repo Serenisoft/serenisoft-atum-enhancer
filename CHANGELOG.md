@@ -2,6 +2,65 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.3.8] - 2025-12-09
+
+### Changed
+- Removed temporary debug console logging from PO choice execution flow
+
+## [0.3.7] - 2025-12-09
+
+### Fixed
+- Removed ATUM's `script-runner` and `tool-runner` classes that triggered ATUM's own JavaScript handlers
+- Prevented double pop-ups (ATUM's unexpected error + our modal) when clicking Generate button
+- Now using custom CSS to style buttons like ATUM's without triggering their event handlers
+
+## [0.3.6] - 2025-12-09
+
+### Changed
+- Redesigned all buttons to match ATUM's tool-runner style (using `.btn` and `.tool-runner` classes)
+- Changed all buttons to use event delegation pattern (`$(document).on()`) consistent with ATUM
+- Updated HTML structure to use ATUM's `script-runner` wrapper for better integration
+
+### Fixed
+- Import buttons (Preview, Import, Cancel) now work with ATUM's dynamic DOM loading
+- All buttons follow ATUM's architecture patterns for consistency and reliability
+
+## [0.3.5] - 2025-12-09
+
+### Fixed
+- "Generate PO Suggestions Now" button now works in all browsers including Brave (implemented event delegation)
+- ATUM adds buttons dynamically after jQuery ready() - now using `$(document).on()` instead of direct element selection
+- This fix makes the button work regardless of when ATUM injects the HTML into the DOM
+
+## [0.3.4] - 2025-12-09
+
+### Fixed
+- "Generate PO Suggestions Now" button now works in Brave Browser (replaced native confirm() with custom HTML modal)
+- Custom modal dialog prevents browser blocking issues and provides better user experience
+
+## [0.3.3] - 2025-12-09
+
+### Added
+- Configurable run frequency: Daily / Twice Weekly / Weekly / Monthly
+- Day selection for weekly and monthly schedules
+- Custom WordPress cron schedules for new frequencies
+
+### Changed
+- Weekly frequency is now the default (recommended for most stores to reduce server load)
+- Improved cron scheduling logic to calculate correct next run times based on frequency and day
+
+## [0.3.2] - 2025-12-09
+
+### Fixed
+- "Enable Automatic Suggestions" checkbox now visible in ATUM settings (was hidden by ATUM's rendering logic)
+- Added CSS override to force display of the checkbox field
+
+## [0.3.1] - 2025-12-08
+
+### Fixed
+- Preview and Import buttons now work correctly in ATUM settings
+- Moved JavaScript to `admin_print_footer_scripts` hook (WordPress sanitization strips inline scripts from HTML fields)
+
 ## [0.3.0] - 2025-12-08
 
 ### Added
