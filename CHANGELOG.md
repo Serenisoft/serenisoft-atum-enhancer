@@ -2,6 +2,25 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.4.0] - 2025-12-10
+
+### Added
+- **Predictive Ordering**: Two-pass system to consolidate purchase orders
+  - New "Predictive Ordering" settings section with comprehensive documentation
+  - Enable Predictive Ordering master switch (default: enabled)
+  - Safety Margin (%): Include products within % above reorder point (default: 15%, max: 100%)
+  - Time-Based Prediction: Include products reaching ROP within 2× supplier lead time (default: enabled)
+  - Pass 1: Identifies suppliers with urgent products (at/below reorder point)
+  - Pass 2: For suppliers with urgent products, re-runs analysis with predictive features
+  - Diagnostic fields: reorder_reason, days_until_rop, safety_margin_threshold
+- Helper method `get_reorder_reason()` to track why products need reordering
+
+### Changed
+- Safety Margin setting renamed from "Stock Threshold (%)" with updated description
+- Default safety margin reduced from 25% to 15%
+- Maximum safety margin increased from 50% to 100%
+- Two-pass filtering prevents premature PO creation while consolidating orders when needed
+
 ## [0.3.8] - 2025-12-09
 
 ### Changed

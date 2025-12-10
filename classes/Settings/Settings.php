@@ -63,8 +63,9 @@ class Settings {
 			'label'    => __( 'Enhancer', 'serenisoft-atum-enhancer' ),
 			'icon'     => 'atmi-star',
 			'sections' => array(
-				'sae_po_suggestions' => __( 'PO Suggestions', 'serenisoft-atum-enhancer' ),
-				'sae_supplier_import' => __( 'Supplier Import', 'serenisoft-atum-enhancer' ),
+				'sae_po_suggestions'      => __( 'PO Suggestions', 'serenisoft-atum-enhancer' ),
+				'sae_predictive_ordering' => __( 'Predictive Ordering', 'serenisoft-atum-enhancer' ),
+				'sae_supplier_import'     => __( 'Supplier Import', 'serenisoft-atum-enhancer' ),
 			),
 		);
 
@@ -204,18 +205,36 @@ class Settings {
 			),
 		);
 
+		$defaults['sae_enable_predictive_ordering'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_predictive_ordering',
+			'name'    => __( 'Enable Predictive Ordering', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Consolidates purchase orders by including products that are close to their reorder point or will reach it soon. This reduces the number of POs needed while ensuring products are ordered before stockouts occur.<br><br><strong>Two-Pass System:</strong><br>• <strong>Pass 1:</strong> Identifies suppliers with urgent products (at or below reorder point)<br>• <strong>Pass 2:</strong> For suppliers where products were identified in Pass 1, re-runs analysis including products within safety margin or predicted to reach reorder point within 2× lead time<br><br>This prevents creating premature POs while consolidating orders when they are needed.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'switcher',
+			'default' => 'yes',
+		);
+
 		$defaults['sae_stock_threshold_percent'] = array(
 			'group'   => self::TAB_KEY,
-			'section' => 'sae_po_suggestions',
-			'name'    => __( 'Stock Threshold (%)', 'serenisoft-atum-enhancer' ),
-			'desc'    => __( 'When stock falls below this percentage of optimal level, include product in suggestions.', 'serenisoft-atum-enhancer' ),
+			'section' => 'sae_predictive_ordering',
+			'name'    => __( 'Safety Margin (%)', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Include products within this % above their reorder point. Example: With 15% margin and reorder point of 100, products with stock ≤ 115 will be included. Only applies when Predictive Ordering is enabled.', 'serenisoft-atum-enhancer' ),
 			'type'    => 'number',
-			'default' => 25,
+			'default' => 15,
 			'options' => array(
-				'min'  => 5,
-				'max'  => 50,
+				'min'  => 0,
+				'max'  => 100,
 				'step' => 5,
 			),
+		);
+
+		$defaults['sae_use_time_based_prediction'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_predictive_ordering',
+			'name'    => __( 'Use Time-Based Prediction', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Include products that will reach their reorder point within 2× the supplier\'s lead time. Example: If lead time is 60 days and a product will hit reorder point in 90 days, include it now. This provides a safety buffer so orders arrive before stockout. Only applies when Predictive Ordering is enabled.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'switcher',
+			'default' => 'yes',
 		);
 
 		$defaults['sae_include_seasonal_analysis'] = array(

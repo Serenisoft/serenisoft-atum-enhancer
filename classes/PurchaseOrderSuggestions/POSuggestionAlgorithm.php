@@ -28,11 +28,12 @@ class POSuggestionAlgorithm {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int $supplier_id Supplier ID.
+	 * @param int  $supplier_id    Supplier ID.
+	 * @param bool $use_predictive Whether to use predictive ordering logic.
 	 *
 	 * @return array Array of product data needing reorder.
 	 */
-	public static function get_products_needing_reorder( $supplier_id ) {
+	public static function get_products_needing_reorder( $supplier_id, $use_predictive = false ) {
 
 		$products_to_reorder = array();
 
@@ -56,8 +57,9 @@ class POSuggestionAlgorithm {
 		$days_of_stock_target = ceil( 365 / $orders_per_year );
 
 		// Get supplier lead time (default 14 days if not set).
-		$supplier  = new Supplier( $supplier_id );
-		$lead_time = $supplier->get_lead_time();
+		// Use Supplier object to get lead_time (correct way to use ATUM)
+		$supplier  = new \Atum\Suppliers\Supplier( $supplier_id );
+		$lead_time = $supplier->lead_time;
 		if ( empty( $lead_time ) || $lead_time < 1 ) {
 			$lead_time = 14;
 		}
@@ -69,7 +71,7 @@ class POSuggestionAlgorithm {
 				continue;
 			}
 
-			$analysis = self::analyze_product( $product, $days_of_stock_target, $lead_time, $service_level, $use_seasonal );
+			$analysis = self::analyze_product( $product, $days_of_stock_target, $lead_time, $service_level, $use_seasonal, $use_predictive );
 
 			if ( $analysis['needs_reorder'] ) {
 				$products_to_reorder[] = $analysis;
@@ -93,16 +95,20 @@ class POSuggestionAlgorithm {
 	 * @param int         $lead_time            Supplier lead time in days.
 	 * @param int         $service_level        Service level percentage (90, 95, 99).
 	 * @param bool        $use_seasonal         Whether to use seasonal analysis.
+	 * @param bool        $use_predictive       Whether to use predictive ordering logic.
 	 *
 	 * @return array Product analysis data.
 	 */
-	public static function analyze_product( $product, $days_of_stock_target, $lead_time, $service_level, $use_seasonal ) {
+	public static function analyze_product( $product, $days_of_stock_target, $lead_time, $service_level, $use_seasonal, $use_predictive = false ) {
 
 		$product_id    = $product->get_id();
 		$current_stock = (int) $product->get_stock_quantity();
 
 		// Get inbound stock (already ordered, waiting to arrive).
-		$inbound_stock = self::get_inbound_stock( $product );
+		// Use ATUM product wrapper to get inbound stock (correct way to use ATUM)
+		$atum_product  = \Atum\Inc\Helpers::get_atum_product( $product_id );
+		$inbound_stock = $atum_product ? $atum_product->get_inbound_stock() : 0;
+		$inbound_stock = $inbound_stock ?? 0; // Handle null return
 
 		// Effective stock = what we have + what's coming.
 		$effective_stock = $current_stock + $inbound_stock;
@@ -122,54 +128,58 @@ class POSuggestionAlgorithm {
 		// Calculate days of stock remaining (based on effective stock).
 		$days_remaining = $avg_daily_sales > 0 ? floor( $effective_stock / $avg_daily_sales ) : 999;
 
-		// Determine if reorder is needed when effective stock falls to or below reorder point.
-		$needs_reorder = $effective_stock <= $reorder_point && $avg_daily_sales > 0;
+		// Determine if reorder is needed
+		// Basic reorder check (always applies)
+		$at_or_below_rop = $effective_stock <= $reorder_point;
+
+		// Predictive logic only applies if enabled
+		$within_safety_margin = false;
+		$will_reach_rop_soon = false;
+		$safety_margin_threshold = $reorder_point; // Default to reorder point
+
+		if ( $use_predictive ) {
+			// Get settings
+			$safety_margin_percent = (float) Settings::get( 'sae_stock_threshold_percent', 15 );
+			$use_time_based = 'yes' === Settings::get( 'sae_use_time_based_prediction', 'yes' );
+
+			// Calculate if within safety margin
+			$safety_margin_threshold = $reorder_point * ( 1 + ( $safety_margin_percent / 100 ) );
+			$within_safety_margin = $effective_stock <= $safety_margin_threshold;
+
+			// Calculate if will reach ROP within 2× lead time (if time-based is enabled)
+			// Using 2× lead time provides buffer - order arrives when stock still has 1× lead time left
+			if ( $use_time_based && $avg_daily_sales > 0 ) {
+				$days_until_rop = ( $effective_stock - $reorder_point ) / $avg_daily_sales;
+				$will_reach_rop_soon = $days_until_rop <= ( 2 * $lead_time );
+			}
+		}
+
+		// Combined logic
+		$needs_reorder = ( $at_or_below_rop || $within_safety_margin || $will_reach_rop_soon ) && $avg_daily_sales > 0;
 
 		// Calculate suggested quantity to bring stock up to optimal level.
 		$suggested_qty = $needs_reorder ? max( 1, $optimal_stock - $effective_stock ) : 0;
 
 		return array(
-			'product_id'       => $product_id,
-			'product_name'     => $product->get_name(),
-			'sku'              => $product->get_sku(),
-			'current_stock'    => $current_stock,
-			'inbound_stock'    => $inbound_stock,
-			'effective_stock'  => $effective_stock,
-			'avg_daily_sales'  => round( $avg_daily_sales, 2 ),
-			'safety_stock'     => $safety_stock,
-			'reorder_point'    => $reorder_point,
-			'optimal_stock'    => $optimal_stock,
-			'days_remaining'   => $days_remaining,
-			'suggested_qty'    => $suggested_qty,
-			'needs_reorder'    => $needs_reorder,
-			'purchase_price'   => self::get_purchase_price( $product ),
+			'product_id'              => $product_id,
+			'product_name'            => $product->get_name(),
+			'sku'                     => $product->get_sku(),
+			'current_stock'           => $current_stock,
+			'inbound_stock'           => $inbound_stock,
+			'effective_stock'         => $effective_stock,
+			'avg_daily_sales'         => round( $avg_daily_sales, 2 ),
+			'safety_stock'            => $safety_stock,
+			'reorder_point'           => $reorder_point,
+			'optimal_stock'           => $optimal_stock,
+			'days_remaining'          => $days_remaining,
+			'suggested_qty'           => $suggested_qty,
+			'needs_reorder'           => $needs_reorder,
+			'purchase_price'          => self::get_purchase_price( $product ),
+			// Diagnostic fields for predictive ordering
+			'reorder_reason'          => self::get_reorder_reason( $at_or_below_rop, $within_safety_margin, $will_reach_rop_soon ),
+			'days_until_rop'          => $avg_daily_sales > 0 ? ( $effective_stock - $reorder_point ) / $avg_daily_sales : 999,
+			'safety_margin_threshold' => $safety_margin_threshold,
 		);
-
-	}
-
-	/**
-	 * Get inbound stock for a product (from pending POs)
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param \WC_Product $product Product object.
-	 *
-	 * @return int Inbound stock quantity.
-	 */
-	public static function get_inbound_stock( $product ) {
-
-		// Use ATUM's helper if available.
-		if ( class_exists( '\Atum\Inc\Helpers' ) && method_exists( '\Atum\Inc\Helpers', 'get_product_inbound_stock' ) ) {
-			return (int) \Atum\Inc\Helpers::get_product_inbound_stock( $product );
-		}
-
-		// Fallback: check if product has the method directly.
-		if ( method_exists( $product, 'get_inbound_stock' ) ) {
-			$inbound = $product->get_inbound_stock();
-			return ! is_null( $inbound ) ? (int) $inbound : 0;
-		}
-
-		return 0;
 
 	}
 
@@ -190,6 +200,9 @@ class POSuggestionAlgorithm {
 		// Get sales from order items for the last 365 days.
 		$year_ago = date( 'Y-m-d', strtotime( '-365 days' ) );
 
+		// Log start of query for this product.
+		$query_start = microtime( true );
+
 		// Get total sales and first sale date for this product.
 		$sales_data = $wpdb->get_row( $wpdb->prepare(
 			"SELECT SUM(oim.meta_value) as total_sales, MIN(p.post_date) as first_sale_date
@@ -209,6 +222,27 @@ class POSuggestionAlgorithm {
 			$year_ago,
 			$product_id
 		) );
+
+		// Log query duration.
+		$query_duration = round( microtime( true ) - $query_start, 3 );
+
+		// Log slow queries (>1 second).
+		if ( $query_duration > 1 ) {
+			error_log( sprintf(
+				'SAE: SLOW QUERY - Product #%d sales query took %s seconds',
+				$product_id,
+				$query_duration
+			) );
+		}
+
+		// Log all queries if duration exceeds 0.5 seconds.
+		if ( $query_duration > 0.5 ) {
+			error_log( sprintf(
+				'SAE: Product #%d sales query: %s seconds',
+				$product_id,
+				$query_duration
+			) );
+		}
 
 		$total_sales = (float) ( $sales_data->total_sales ?? 0 );
 
@@ -360,6 +394,35 @@ class POSuggestionAlgorithm {
 		$safety_stock = $z * $std_dev * sqrt( max( 1, $lead_time ) );
 
 		return (int) ceil( $safety_stock );
+
+	}
+
+	/**
+	 * Determine the reason why a product needs reordering
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param bool $at_or_below_rop      At or below reorder point.
+	 * @param bool $within_safety_margin Within safety margin threshold.
+	 * @param bool $will_reach_rop_soon  Will reach ROP within lead time.
+	 *
+	 * @return string Reason code.
+	 */
+	private static function get_reorder_reason( $at_or_below_rop, $within_safety_margin, $will_reach_rop_soon ) {
+
+		if ( $at_or_below_rop ) {
+			return 'at_rop';
+		}
+
+		if ( $within_safety_margin ) {
+			return 'safety_margin';
+		}
+
+		if ( $will_reach_rop_soon ) {
+			return 'predictive';
+		}
+
+		return 'unknown';
 
 	}
 
