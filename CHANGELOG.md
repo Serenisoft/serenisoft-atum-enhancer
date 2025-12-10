@@ -2,6 +2,23 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.8.0] - 2025-12-10
+
+### Changed
+- **Improved Seasonal Analysis**: Completely redesigned to look at the future coverage period instead of current month
+  - Now calculates when the order will arrive (today + lead time)
+  - Analyzes the period the order needs to cover (arrival date + days of stock target)
+  - Weights historical sales data for each month in the coverage period
+  - Critical for products with extreme seasonal variations (e.g., 800 units Oct-Mar, near-zero Apr-Sep)
+  - Example: Ordering in August with 60-day lead time now correctly forecasts for October arrival (high season)
+  - Prevents under-ordering for seasonal peaks and over-ordering for off-season periods
+
+### Technical Details
+- `apply_seasonal_adjustment()` now accepts `$lead_time` and `$days_of_stock_target` parameters
+- Calculates coverage period: `arrival_date = today + lead_time`, `coverage = arrival_date to arrival_date + days_of_stock`
+- Queries historical sales grouped by month, then weights each month by how many days it covers in the future period
+- Seasonal factor = (weighted monthly sales / expected baseline) with 50% dampening and 0.5x-2.0x clamping
+
 ## [0.7.0] - 2025-12-10
 
 ### Added

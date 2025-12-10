@@ -114,7 +114,7 @@ class POSuggestionAlgorithm {
 		$effective_stock = $current_stock + $inbound_stock;
 
 		// Get average daily sales.
-		$avg_daily_sales = self::get_average_daily_sales( $product_id, $use_seasonal );
+		$avg_daily_sales = self::get_average_daily_sales( $product_id, $use_seasonal, $lead_time, $days_of_stock_target );
 
 		// Calculate safety stock using statistical formula.
 		$safety_stock = self::calculate_safety_stock( $product_id, $lead_time, $service_level );
@@ -262,12 +262,14 @@ class POSuggestionAlgorithm {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int  $product_id   Product ID.
-	 * @param bool $use_seasonal Whether to use seasonal adjustment.
+	 * @param int  $product_id           Product ID.
+	 * @param bool $use_seasonal         Whether to use seasonal adjustment.
+	 * @param int  $lead_time            Supplier lead time in days.
+	 * @param int  $days_of_stock_target Target days of stock to maintain.
 	 *
 	 * @return float Average daily sales.
 	 */
-	public static function get_average_daily_sales( $product_id, $use_seasonal = true ) {
+	public static function get_average_daily_sales( $product_id, $use_seasonal = true, $lead_time = 14, $days_of_stock_target = 91 ) {
 
 		global $wpdb;
 
@@ -337,7 +339,7 @@ class POSuggestionAlgorithm {
 		$avg_daily = self::apply_trend_adjustment( $product_id, $avg_daily, $days_of_history );
 
 		if ( $use_seasonal ) {
-			$avg_daily = self::apply_seasonal_adjustment( $product_id, $avg_daily );
+			$avg_daily = self::apply_seasonal_adjustment( $product_id, $avg_daily, $lead_time, $days_of_stock_target );
 		}
 
 		// Cap combined adjustment to prevent extreme values (0.4x to 2.5x).
@@ -503,42 +505,32 @@ class POSuggestionAlgorithm {
 	/**
 	 * Apply seasonal adjustment to daily sales average
 	 *
-	 * @since 1.0.0
+	 * Uses future-looking seasonal analysis based on when the order will arrive
+	 * and which period it needs to cover.
 	 *
-	 * @param int   $product_id Product ID.
-	 * @param float $avg_daily  Current average daily sales.
+	 * @since 0.8.0
+	 *
+	 * @param int   $product_id           Product ID.
+	 * @param float $avg_daily            Current average daily sales.
+	 * @param int   $lead_time            Supplier lead time in days.
+	 * @param int   $days_of_stock_target Target days of stock to maintain.
 	 *
 	 * @return float Seasonally adjusted average.
 	 */
-	public static function apply_seasonal_adjustment( $product_id, $avg_daily ) {
+	public static function apply_seasonal_adjustment( $product_id, $avg_daily, $lead_time = 14, $days_of_stock_target = 91 ) {
 
 		global $wpdb;
 
-		$current_month = (int) date( 'n' );
+		// Calculate when the order will arrive.
+		$arrival_timestamp = strtotime( "+{$lead_time} days" );
 
-		// Get sales for current month across previous years.
-		$month_sales = $wpdb->get_var( $wpdb->prepare(
-			"SELECT SUM(oim.meta_value)
-			FROM {$wpdb->prefix}woocommerce_order_itemmeta oim
-			INNER JOIN {$wpdb->prefix}woocommerce_order_items oi ON oim.order_item_id = oi.order_item_id
-			INNER JOIN {$wpdb->posts} p ON oi.order_id = p.ID
-			WHERE oim.meta_key = '_qty'
-			AND oi.order_item_type = 'line_item'
-			AND p.post_type = 'shop_order'
-			AND p.post_status IN ('wc-completed', 'wc-processing')
-			AND MONTH(p.post_date) = %d
-			AND oi.order_item_id IN (
-				SELECT order_item_id FROM {$wpdb->prefix}woocommerce_order_itemmeta
-				WHERE meta_key IN ('_product_id', '_variation_id')
-				AND meta_value = %d
-			)",
-			$current_month,
-			$product_id
-		) );
+		// Calculate the coverage period (from arrival to next reorder).
+		$coverage_start = $arrival_timestamp;
+		$coverage_end   = strtotime( "+{$days_of_stock_target} days", $coverage_start );
 
-		// Get total sales all time.
-		$total_sales = $wpdb->get_var( $wpdb->prepare(
-			"SELECT SUM(oim.meta_value)
+		// Get historical sales data for each month (all years combined).
+		$monthly_sales = $wpdb->get_results( $wpdb->prepare(
+			"SELECT MONTH(p.post_date) as month_num, SUM(oim.meta_value) as total_sales
 			FROM {$wpdb->prefix}woocommerce_order_itemmeta oim
 			INNER JOIN {$wpdb->prefix}woocommerce_order_items oi ON oim.order_item_id = oi.order_item_id
 			INNER JOIN {$wpdb->posts} p ON oi.order_id = p.ID
@@ -550,28 +542,64 @@ class POSuggestionAlgorithm {
 				SELECT order_item_id FROM {$wpdb->prefix}woocommerce_order_itemmeta
 				WHERE meta_key IN ('_product_id', '_variation_id')
 				AND meta_value = %d
-			)",
+			)
+			GROUP BY MONTH(p.post_date)",
 			$product_id
-		) );
+		), OBJECT_K );
+
+		// Get total sales to calculate baseline.
+		$total_sales = array_sum( array_column( $monthly_sales, 'total_sales' ) );
 
 		if ( empty( $total_sales ) || $total_sales < 12 ) {
 			// Not enough data for seasonal adjustment.
 			return $avg_daily;
 		}
 
-		// Calculate expected monthly percentage (1/12 = 8.33%).
-		$expected_monthly_percent = 100 / 12;
+		// Calculate which months the coverage period spans and how many days in each.
+		$month_coverage = array();
+		$current_date   = $coverage_start;
 
-		// Calculate actual monthly percentage.
-		$actual_monthly_percent = ( $month_sales / $total_sales ) * 100;
+		while ( $current_date < $coverage_end ) {
+			$month_num  = (int) date( 'n', $current_date );
+			$month_end  = strtotime( 'last day of this month', $current_date );
+			$days_in_month = min( $coverage_end, $month_end ) - $current_date;
+			$days_in_month = ceil( $days_in_month / DAY_IN_SECONDS );
+
+			if ( ! isset( $month_coverage[ $month_num ] ) ) {
+				$month_coverage[ $month_num ] = 0;
+			}
+			$month_coverage[ $month_num ] += $days_in_month;
+
+			// Move to next month.
+			$current_date = strtotime( 'first day of next month', $current_date );
+		}
+
+		// Calculate weighted seasonal factor based on coverage months.
+		$total_days           = array_sum( $month_coverage );
+		$weighted_sales       = 0;
+		$expected_sales_ratio = 1 / 12; // Each month should be 8.33% of yearly sales.
+
+		foreach ( $month_coverage as $month_num => $days_covered ) {
+			// Get historical sales for this month.
+			$month_sales_data = isset( $monthly_sales[ $month_num ] ) ? $monthly_sales[ $month_num ]->total_sales : 0;
+
+			// Calculate this month's percentage of total yearly sales.
+			$month_ratio = $total_sales > 0 ? ( $month_sales_data / $total_sales ) : $expected_sales_ratio;
+
+			// Weight by how many days of this month are covered.
+			$weight = $days_covered / $total_days;
+			$weighted_sales += $month_ratio * $weight;
+		}
 
 		// Calculate seasonal factor.
-		$seasonal_factor = $actual_monthly_percent / $expected_monthly_percent;
+		// If weighted_sales is 0.15 (15% of yearly sales) and expected is 0.0833 (8.33%),
+		// then seasonal_factor = 0.15 / 0.0833 = 1.8 (80% higher than average).
+		$seasonal_factor = $weighted_sales / $expected_sales_ratio;
 
-		// Apply factor with dampening (don't swing too wildly).
+		// Apply factor with dampening (50% dampening - don't swing too wildly).
 		$dampened_factor = 1 + ( ( $seasonal_factor - 1 ) * 0.5 );
 
-		// Clamp between 0.5 and 2.0.
+		// Clamp between 0.5 and 2.0 to avoid extreme adjustments.
 		$dampened_factor = max( 0.5, min( 2.0, $dampened_factor ) );
 
 		return $avg_daily * $dampened_factor;

@@ -86,7 +86,11 @@ Pass 2 orders MORE PROACTIVELY - before you actually hit the reorder point.
 
 1. **Calculate Average Daily Sales**
    - Adjusts for trend (last 30 days weighted 70%, history 30%)
-   - Adjusts for seasonality (compares current month vs annual average)
+   - Adjusts for seasonality using future-looking analysis:
+     - Calculates when order arrives (today + lead time)
+     - Determines coverage period (arrival + days of stock target)
+     - Weights historical sales for each month in that future period
+     - Critical for products with extreme seasonal variations
 
 2. **Calculate Safety Stock**
    - Formula: Z-score × Standard Deviation × √Lead Time
@@ -119,6 +123,31 @@ Where Z is the z-score for desired service level:
 
 ### Trend Adjustment
 Recent sales (last 30 days) are weighted 70%, historical average 30%.
+
+### Seasonal Analysis (Future-Looking)
+
+The seasonal adjustment uses a sophisticated future-looking approach instead of just looking at the current month:
+
+**How it works:**
+1. **Calculate arrival date**: Today + supplier lead time
+2. **Calculate coverage period**: Arrival date + days between orders
+3. **Analyze future months**: Determines which months the order will cover
+4. **Weight historical data**: Each month's historical sales weighted by coverage days
+5. **Adjust forecast**: Applies weighted seasonal factor to daily sales estimate
+
+**Example scenario:**
+- Today: August 15
+- Lead time: 60 days → Arrives October 15
+- Orders/year: 4 → Covers 92 days
+- Coverage: Oct 15 - Jan 15 (15 days Oct, 30 days Nov, 31 days Dec, 16 days Jan)
+- Product sells 800 units Oct-Mar, near-zero Apr-Sep
+- Result: Correctly forecasts high seasonal demand and orders accordingly
+
+**Benefits:**
+- Prevents under-ordering before seasonal peaks
+- Prevents over-ordering for off-season periods
+- Essential for products with extreme seasonal variations
+- Accounts for long lead times (2-3 months)
 
 ## License
 
