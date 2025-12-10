@@ -21,7 +21,8 @@ All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 - Queries historical sales grouped by month, then weights each month by how many days it covers in the future period
 - Seasonal factor = (weighted monthly sales / expected baseline) with 0.5x-4.0x clamping
 - **No dampening** - historical data reflects actual sales patterns, no artificial conservative bias
-- Global cap (0.4x-2.5x on total adjustments) still provides safety net
+- **Global cap increased from 2.5x to 10x** - allows extreme seasonal variations while providing safety net against data errors
+- Global cap (0.4x-10x on total adjustments) protects against data quality issues without limiting legitimate seasonal patterns
 - Debug logging shows coverage period, months covered, historical sales, and seasonal factor applied
 
 ## [0.7.0] - 2025-12-10

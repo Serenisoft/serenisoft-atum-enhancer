@@ -146,7 +146,8 @@ The seasonal adjustment uses a sophisticated future-looking approach instead of 
 **Seasonal factor:**
 - No dampening applied - uses raw historical data
 - Capped at 0.5x-4.0x to prevent extreme values
-- Global safety net: Total adjustments (trend + seasonal) capped at 0.4x-2.5x
+- Global safety net: Total adjustments (trend + seasonal) capped at 0.4x-10x
+- 10x cap allows extreme seasonal variations while protecting against data errors
 
 **Benefits:**
 - Prevents under-ordering before seasonal peaks

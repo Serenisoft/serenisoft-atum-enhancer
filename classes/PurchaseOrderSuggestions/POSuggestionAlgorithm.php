@@ -342,10 +342,11 @@ class POSuggestionAlgorithm {
 			$avg_daily = self::apply_seasonal_adjustment( $product_id, $avg_daily, $lead_time, $days_of_stock_target );
 		}
 
-		// Cap combined adjustment to prevent extreme values (0.4x to 2.5x).
+		// Cap combined adjustment to prevent extreme values (0.4x to 10x).
+		// 10x cap allows for extreme seasonal variations while providing safety net against data errors.
 		if ( $original_avg > 0 ) {
 			$min_avg = $original_avg * 0.4;
-			$max_avg = $original_avg * 2.5;
+			$max_avg = $original_avg * 10.0;
 			$avg_daily = max( $min_avg, min( $max_avg, $avg_daily ) );
 		}
 
