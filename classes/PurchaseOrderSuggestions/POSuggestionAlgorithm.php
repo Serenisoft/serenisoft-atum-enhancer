@@ -132,13 +132,17 @@ class POSuggestionAlgorithm {
 		// Basic reorder check (always applies)
 		$at_or_below_rop = $effective_stock <= $reorder_point;
 
+		// Get SKU for debug logging
+		$sku = $product->get_sku() ?: 'N/A';
+
 		// Debug logging for Pass 1 (basic reorder check with calculations)
 		if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
 			$reason_text = $at_or_below_rop ? 'REORDER (at/below ROP)' : 'SKIP (above ROP)';
 
 			// Log ROP calculation
 			error_log( sprintf(
-				'SAE DEBUG: [Pass 1] %s | ROP Calc: (%.2f avg/day × %d lead days) + %d safety = %d',
+				'SAE DEBUG: [Pass 1] [%s] %s | ROP Calc: (%.2f avg/day × %d lead days) + %d safety = %d',
+				$sku,
 				$product->get_name(),
 				$avg_daily_sales,
 				$lead_time,
@@ -148,7 +152,8 @@ class POSuggestionAlgorithm {
 
 			// Log order quantity calculation
 			error_log( sprintf(
-				'SAE DEBUG: [Pass 1] %s | Order Calc: %d optimal - %d current - %d inbound = %d suggested',
+				'SAE DEBUG: [Pass 1] [%s] %s | Order Calc: %d optimal - %d current - %d inbound = %d suggested',
+				$sku,
 				$product->get_name(),
 				$optimal_stock,
 				$current_stock,
@@ -158,7 +163,8 @@ class POSuggestionAlgorithm {
 
 			// Log decision
 			error_log( sprintf(
-				'SAE DEBUG: [Pass 1] %s | Decision: Stock %d vs ROP %d → %s',
+				'SAE DEBUG: [Pass 1] [%s] %s | Decision: Stock %d vs ROP %d → %s',
+				$sku,
 				$product->get_name(),
 				$effective_stock,
 				$reorder_point,
@@ -212,7 +218,8 @@ class POSuggestionAlgorithm {
 				: 'SKIP (predictive not triggered)';
 
 			error_log( sprintf(
-				'SAE DEBUG: [Pass 2] %s | Stock: %d | Safety Threshold: %d | Days to ROP: %.1f | Suggested Qty: %d | %s',
+				'SAE DEBUG: [Pass 2] [%s] %s | Stock: %d | Safety Threshold: %d | Days to ROP: %.1f | Suggested Qty: %d | %s',
+				$sku,
 				$product->get_name(),
 				$effective_stock,
 				(int) $safety_margin_threshold,
