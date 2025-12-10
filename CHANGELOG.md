@@ -9,7 +9,9 @@ All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
   - Now calculates when the order will arrive (today + lead time)
   - Analyzes the period the order needs to cover (arrival date + days of stock target)
   - Weights historical sales data for each month in the coverage period
-  - Critical for products with extreme seasonal variations (e.g., 800 units Oct-Mar, near-zero Apr-Sep)
+  - **Removed dampening** - uses raw seasonal factor to capture true seasonal variations
+  - **Increased cap from 2.0x to 4.0x** - essential for products with extreme seasonal variations
+  - Critical for products like 800 units Oct-Mar, near-zero Apr-Sep
   - Example: Ordering in August with 60-day lead time now correctly forecasts for October arrival (high season)
   - Prevents under-ordering for seasonal peaks and over-ordering for off-season periods
 
@@ -17,7 +19,10 @@ All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 - `apply_seasonal_adjustment()` now accepts `$lead_time` and `$days_of_stock_target` parameters
 - Calculates coverage period: `arrival_date = today + lead_time`, `coverage = arrival_date to arrival_date + days_of_stock`
 - Queries historical sales grouped by month, then weights each month by how many days it covers in the future period
-- Seasonal factor = (weighted monthly sales / expected baseline) with 50% dampening and 0.5x-2.0x clamping
+- Seasonal factor = (weighted monthly sales / expected baseline) with 0.5x-4.0x clamping
+- **No dampening** - historical data reflects actual sales patterns, no artificial conservative bias
+- Global cap (0.4x-2.5x on total adjustments) still provides safety net
+- Debug logging shows coverage period, months covered, historical sales, and seasonal factor applied
 
 ## [0.7.0] - 2025-12-10
 

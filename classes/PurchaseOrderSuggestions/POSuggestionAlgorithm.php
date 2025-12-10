@@ -596,13 +596,11 @@ class POSuggestionAlgorithm {
 		// then seasonal_factor = 0.15 / 0.0833 = 1.8 (80% higher than average).
 		$seasonal_factor = $weighted_sales / $expected_sales_ratio;
 
-		// Apply factor with dampening (50% dampening - don't swing too wildly).
-		$dampened_factor = 1 + ( ( $seasonal_factor - 1 ) * 0.5 );
+		// Clamp between 0.5 and 4.0 to avoid extreme adjustments.
+		// No dampening - use raw seasonal factor to capture true seasonal variations.
+		$seasonal_factor = max( 0.5, min( 4.0, $seasonal_factor ) );
 
-		// Clamp between 0.5 and 2.0 to avoid extreme adjustments.
-		$dampened_factor = max( 0.5, min( 2.0, $dampened_factor ) );
-
-		$adjusted_avg = $avg_daily * $dampened_factor;
+		$adjusted_avg = $avg_daily * $seasonal_factor;
 
 		// Debug logging for seasonal adjustment
 		if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
@@ -642,9 +640,8 @@ class POSuggestionAlgorithm {
 			}
 
 			error_log( sprintf(
-				'SAE DEBUG: [Seasonal] Product #%d | Factor: %.2fx (dampened from %.2fx) | Avg: %.2f → %.2f units/day',
+				'SAE DEBUG: [Seasonal] Product #%d | Factor: %.2fx (capped 0.5-4.0) | Avg: %.2f → %.2f units/day',
 				$product_id,
-				$dampened_factor,
 				$seasonal_factor,
 				$avg_daily,
 				$adjusted_avg

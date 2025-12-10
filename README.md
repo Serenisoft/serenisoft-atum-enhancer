@@ -143,11 +143,17 @@ The seasonal adjustment uses a sophisticated future-looking approach instead of 
 - Product sells 800 units Oct-Mar, near-zero Apr-Sep
 - Result: Correctly forecasts high seasonal demand and orders accordingly
 
+**Seasonal factor:**
+- No dampening applied - uses raw historical data
+- Capped at 0.5x-4.0x to prevent extreme values
+- Global safety net: Total adjustments (trend + seasonal) capped at 0.4x-2.5x
+
 **Benefits:**
 - Prevents under-ordering before seasonal peaks
 - Prevents over-ordering for off-season periods
-- Essential for products with extreme seasonal variations
+- Essential for products with extreme seasonal variations (e.g., 800 units in 6 months, near-zero in 6 months)
 - Accounts for long lead times (2-3 months)
+- Raw seasonal factor captures true demand patterns without artificial conservative bias
 
 ## License
 
