@@ -602,7 +602,56 @@ class POSuggestionAlgorithm {
 		// Clamp between 0.5 and 2.0 to avoid extreme adjustments.
 		$dampened_factor = max( 0.5, min( 2.0, $dampened_factor ) );
 
-		return $avg_daily * $dampened_factor;
+		$adjusted_avg = $avg_daily * $dampened_factor;
+
+		// Debug logging for seasonal adjustment
+		if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
+			$month_names = [ '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' ];
+
+			error_log( sprintf(
+				'SAE DEBUG: [Seasonal] Product #%d | Coverage: %s to %s (%d days)',
+				$product_id,
+				date( 'M j', $coverage_start ),
+				date( 'M j', $coverage_end ),
+				$total_days
+			) );
+
+			// Log coverage months
+			$coverage_parts = array();
+			foreach ( $month_coverage as $month_num => $days ) {
+				$coverage_parts[] = sprintf( '%s:%dd', $month_names[ $month_num ], $days );
+			}
+			error_log( sprintf(
+				'SAE DEBUG: [Seasonal] Product #%d | Months covered: %s',
+				$product_id,
+				implode( ', ', $coverage_parts )
+			) );
+
+			// Log historical sales per month
+			$sales_parts = array();
+			foreach ( $monthly_sales as $month_num => $data ) {
+				$sales_parts[] = sprintf( '%s:%d', $month_names[ $month_num ], (int) $data->total_sales );
+			}
+			if ( ! empty( $sales_parts ) ) {
+				error_log( sprintf(
+					'SAE DEBUG: [Seasonal] Product #%d | Historical sales: %s (total: %d)',
+					$product_id,
+					implode( ', ', $sales_parts ),
+					(int) $total_sales
+				) );
+			}
+
+			error_log( sprintf(
+				'SAE DEBUG: [Seasonal] Product #%d | Factor: %.2fx (dampened from %.2fx) | Avg: %.2f → %.2f units/day',
+				$product_id,
+				$dampened_factor,
+				$seasonal_factor,
+				$avg_daily,
+				$adjusted_avg
+			) );
+		}
+
+		return $adjusted_avg;
 
 	}
 
