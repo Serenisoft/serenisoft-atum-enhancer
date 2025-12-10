@@ -198,6 +198,12 @@ class POSuggestionGenerator {
 			}
 			error_log( sprintf( 'SAE: Processing supplier #%d (%s)', $supplier_id, $supplier_name ) );
 
+			// Debug logging: Supplier header
+			if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
+				error_log( sprintf( 'SAE DEBUG: === Processing Supplier #%d: %s ===', $supplier_id, $supplier_name ) );
+				error_log( '' ); // Empty line for readability
+			}
+
 			// Get existing POs for this supplier.
 			error_log( sprintf( 'SAE: Checking for existing POs for supplier #%d...', $supplier_id ) );
 			$existing_pos = $this->get_existing_pos_for_supplier( $supplier_id );
@@ -262,6 +268,12 @@ class POSuggestionGenerator {
 				$analysis_duration,
 				count( $products_to_reorder )
 			) );
+
+			// Debug logging: Supplier summary
+			if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
+				error_log( sprintf( 'SAE DEBUG: Supplier #%d: %d products need reordering', $supplier_id, count( $products_to_reorder ) ) );
+				error_log( '' ); // Empty line for readability
+			}
 
 			$total_products       += $product_count;
 			$products_below_reorder += count( $all_products_to_reorder ); // Count all, not just filtered

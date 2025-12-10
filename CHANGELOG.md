@@ -2,6 +2,18 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.7.0] - 2025-12-10
+
+### Added
+- **Debug Logging**: New setting to enable detailed analysis logging during PO generation
+  - Enable via "Enable Debug Logging" switch in PO Suggestions settings
+  - Logs supplier name before processing each supplier's products
+  - Logs Pass 1 analysis: ROP calculation, order quantity calculation, and decision for each product
+  - Logs Pass 2 analysis: Predictive triggers, safety threshold, days to ROP, and suggested quantity
+  - Separator lines between products for easy reading
+  - Summary shows total products needing reordering per supplier
+  - All debug output goes to WordPress debug.log (when WP_DEBUG_LOG is enabled)
+
 ## [0.6.0] - 2025-12-10
 
 ### Added

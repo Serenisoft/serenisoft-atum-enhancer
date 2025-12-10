@@ -132,6 +132,40 @@ class POSuggestionAlgorithm {
 		// Basic reorder check (always applies)
 		$at_or_below_rop = $effective_stock <= $reorder_point;
 
+		// Debug logging for Pass 1 (basic reorder check with calculations)
+		if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
+			$reason_text = $at_or_below_rop ? 'REORDER (at/below ROP)' : 'SKIP (above ROP)';
+
+			// Log ROP calculation
+			error_log( sprintf(
+				'SAE DEBUG: [Pass 1] %s | ROP Calc: (%.2f avg/day × %d lead days) + %d safety = %d',
+				$product->get_name(),
+				$avg_daily_sales,
+				$lead_time,
+				$safety_stock,
+				$reorder_point
+			) );
+
+			// Log order quantity calculation
+			error_log( sprintf(
+				'SAE DEBUG: [Pass 1] %s | Order Calc: %d optimal - %d current - %d inbound = %d suggested',
+				$product->get_name(),
+				$optimal_stock,
+				$current_stock,
+				$inbound_stock,
+				max( 1, $optimal_stock - $effective_stock )
+			) );
+
+			// Log decision
+			error_log( sprintf(
+				'SAE DEBUG: [Pass 1] %s | Decision: Stock %d vs ROP %d → %s',
+				$product->get_name(),
+				$effective_stock,
+				$reorder_point,
+				$reason_text
+			) );
+		}
+
 		// Predictive logic only applies if enabled
 		$within_safety_margin = false;
 		$will_reach_rop_soon = false;
@@ -159,6 +193,39 @@ class POSuggestionAlgorithm {
 
 		// Calculate suggested quantity to bring stock up to optimal level.
 		$suggested_qty = $needs_reorder ? max( 1, $optimal_stock - $effective_stock ) : 0;
+
+		// Calculate days until ROP for logging (if not already calculated in predictive logic)
+		$days_until_rop = $avg_daily_sales > 0 ? ( $effective_stock - $reorder_point ) / $avg_daily_sales : 999;
+
+		// Debug logging for Pass 2 (predictive analysis)
+		if ( $use_predictive && 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
+			$reasons = array();
+			if ( $within_safety_margin ) {
+				$reasons[] = 'within safety margin';
+			}
+			if ( $will_reach_rop_soon ) {
+				$reasons[] = 'will reach ROP soon';
+			}
+
+			$reason_text = ! empty( $reasons )
+				? 'REORDER (' . implode( ', ', $reasons ) . ')'
+				: 'SKIP (predictive not triggered)';
+
+			error_log( sprintf(
+				'SAE DEBUG: [Pass 2] %s | Stock: %d | Safety Threshold: %d | Days to ROP: %.1f | Suggested Qty: %d | %s',
+				$product->get_name(),
+				$effective_stock,
+				(int) $safety_margin_threshold,
+				$days_until_rop,
+				$suggested_qty,
+				$reason_text
+			) );
+		}
+
+		// Add separator line after each product for readability
+		if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
+			error_log( 'SAE DEBUG: ---' );
+		}
 
 		return array(
 			'product_id'              => $product_id,

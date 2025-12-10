@@ -63,6 +63,45 @@ Leverandornummer;Navn;Organisasjonsnummer;Telefonnummer;E-postadresse;Postadress
 
 ## Algorithm Details
 
+### Analysis Process Overview
+
+The plugin uses a two-pass analysis system to determine which products need reordering:
+
+#### **Pass 1 - Basic Reorder Analysis**
+
+**Determines if ordering is needed:**
+- Checks if effective stock ≤ reorder point (ROP)
+- Formula: ROP = (Average Daily Sales × Lead Time) + Safety Stock
+- Orders ONLY when inventory is at or below the reorder point
+
+#### **Pass 2 - Predictive Analysis** (when enabled)
+
+**Additional checks (in addition to Pass 1):**
+1. **Safety Margin Check** - Are we within 15% above ROP?
+2. **Time-Based Check** - Will we reach ROP within 2× lead time?
+
+Pass 2 orders MORE PROACTIVELY - before you actually hit the reorder point.
+
+### Calculation Process
+
+1. **Calculate Average Daily Sales**
+   - Adjusts for trend (last 30 days weighted 70%, history 30%)
+   - Adjusts for seasonality (compares current month vs annual average)
+
+2. **Calculate Safety Stock**
+   - Formula: Z-score × Standard Deviation × √Lead Time
+   - Z-score = 1.65 for 95% service level
+
+3. **Calculate Optimal Inventory Level**
+   - Formula: (Average Daily Sales × Days Between Orders) + Safety Stock
+   - Example: With 4 orders/year = 92 days of stock + safety stock
+
+4. **Calculate Suggested Quantity**
+   - Formula: Optimal Inventory - Effective Stock (including inbound stock)
+   - Fills up to the optimal level
+
+**In simple terms:** Pass 1 waits until you MUST order, Pass 2 orders BEFORE you run out.
+
 ### Reorder Point Formula
 ```
 Reorder Point = (Average Daily Sales x Lead Time) + Safety Stock

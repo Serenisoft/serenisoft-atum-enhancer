@@ -200,6 +200,15 @@ class Settings {
 			'default' => 'no',
 		);
 
+		$defaults['sae_enable_debug_logging'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_po_suggestions',
+			'name'    => __( 'Enable Debug Logging', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Log detailed analysis for each product during PO generation. Check WordPress debug.log for output.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'switcher',
+			'default' => 'no',
+		);
+
 		$defaults['sae_min_days_before_reorder'] = array(
 			'group'   => self::TAB_KEY,
 			'section' => 'sae_po_suggestions',
