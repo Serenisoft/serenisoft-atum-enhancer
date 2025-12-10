@@ -1,0 +1,80 @@
+/**
+ * Bulk Supplier Assignment Modal Styles
+ *
+ * @package SereniSoft ATUM Enhancer
+ * @since 0.5.0
+ */
+
+/* Modal overlay - full screen semi-transparent background */
+.sae-bulk-supplier-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.7);
+	z-index: 100000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Modal container - centered white box */
+.sae-bulk-supplier-modal {
+	background: #fff;
+	padding: 20px;
+	border-radius: 4px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+	min-width: 400px;
+	max-width: 500px;
+	max-height: 90vh;
+	overflow-y: auto;
+}
+
+/* Modal title */
+.sae-bulk-supplier-modal h2 {
+	margin: 0 0 20px 0;
+	padding: 0;
+	font-size: 18px;
+	font-weight: 600;
+	color: #23282d;
+}
+
+/* Modal body - contains the supplier select dropdown */
+.sae-modal-body {
+	margin-bottom: 20px;
+}
+
+.sae-modal-body label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: 600;
+	color: #23282d;
+}
+
+/* Modal footer - contains action buttons */
+.sae-modal-footer {
+	display: flex;
+	gap: 10px;
+	justify-content: flex-end;
+	padding-top: 10px;
+	border-top: 1px solid #ddd;
+}
+
+/* Ensure Select2 dropdown appears above modal */
+.select2-container {
+	z-index: 100001 !important;
+}
+
+.select2-dropdown {
+	z-index: 100002 !important;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 600px) {
+	.sae-bulk-supplier-modal {
+		min-width: 90%;
+		max-width: 90%;
+		margin: 20px;
+	}
+}

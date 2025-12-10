@@ -19,6 +19,7 @@ use SereniSoft\AtumEnhancer\SupplierImport\SupplierImport;
 use SereniSoft\AtumEnhancer\Suppliers\SupplierFields;
 use SereniSoft\AtumEnhancer\Products\ProductFields;
 use SereniSoft\AtumEnhancer\PurchaseOrderSuggestions\POSuggestionGenerator;
+use SereniSoft\AtumEnhancer\BulkActions\BulkSupplierAssignment;
 
 class Bootstrap {
 
@@ -99,6 +100,9 @@ class Bootstrap {
 
 		// Initialize PO Suggestion Generator.
 		POSuggestionGenerator::get_instance();
+
+		// Initialize Bulk Supplier Assignment.
+		BulkSupplierAssignment::get_instance();
 
 	}
 

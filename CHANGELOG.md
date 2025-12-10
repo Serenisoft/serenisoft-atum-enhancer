@@ -2,6 +2,30 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.5.1] - 2025-12-10
+
+### Fixed
+- **Bulk Supplier Assignment**: Fixed "Bulk action not found" error by using WordPress hooks (`atum_listTable_applyBulkAction`) instead of jQuery event interception
+- **Supplier Search**: Fixed empty search results by using correct nonce (`search-products`) and transforming ATUM's response format to Select2 format
+- **User Experience**: Removed success alert dialog after supplier assignment - now silently reloads table
+
+### Technical Details
+- Replaced jQuery click event handler with `wp.hooks.addFilter()` to intercept bulk action before ATUM sends AJAX
+- Added `searchNonce` with correct `search-products` nonce for ATUM's supplier search AJAX handler
+- Transformed ATUM's response format `{"123": "Name"}` to Select2 format `{results: [{id: "123", text: "Name"}]}`
+- Used `selectWoo` (WooCommerce's Select2) with proper ATUM classes and data attributes
+
+## [0.5.0] - 2025-12-10
+
+### Added
+- **Bulk Supplier Assignment**: New bulk action in ATUM Stock Central to assign suppliers to multiple products at once
+  - Modal dialog for supplier selection using ATUM's Select2 search
+  - Reuses ATUM's `atum_json_search_suppliers` AJAX action (identical to individual assignment)
+  - Handles both simple and variable products (assigns to all variations automatically)
+  - Permission check: Only users with `edit_suppliers` capability can use
+  - Error handling: Shows success count and error details for failed products
+  - Uses ATUM's data patterns: `Helpers::get_atum_product()` → `set_supplier_id()` → `save_atum_data()`
+
 ## [0.4.0] - 2025-12-10
 
 ### Added
