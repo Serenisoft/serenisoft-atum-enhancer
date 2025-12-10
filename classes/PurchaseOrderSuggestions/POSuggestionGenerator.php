@@ -146,6 +146,13 @@ class POSuggestionGenerator {
 		$total_products         = 0;
 		$products_below_reorder = 0;
 
+		// Check if dry run mode is enabled.
+		$dry_run = 'yes' === \Atum\Inc\Helpers::get_option( 'sae_enable_dry_run', 'no' );
+
+		if ( $dry_run ) {
+			error_log( 'SAE: Running in DRY RUN mode - no POs will be created' );
+		}
+
 		// Get all suppliers.
 		$suppliers = $this->get_all_suppliers();
 
@@ -278,26 +285,32 @@ class POSuggestionGenerator {
 				continue; // Don't auto-create, wait for user choice
 			}
 
-			// No existing POs - create new as normal.
-			error_log( sprintf( 'SAE: Creating PO for supplier #%d (%s) with %d products', $supplier_id, $supplier_name, count( $products_to_reorder ) ) );
-			$result = $this->create_po_for_supplier( $supplier_id, $products_to_reorder );
+			// No existing POs - create new (or simulate in dry run mode).
+			if ( ! $dry_run ) {
+				error_log( sprintf( 'SAE: Creating PO for supplier #%d (%s) with %d products', $supplier_id, $supplier_name, count( $products_to_reorder ) ) );
+				$result = $this->create_po_for_supplier( $supplier_id, $products_to_reorder );
 
-			if ( is_wp_error( $result ) ) {
-				error_log( sprintf( 'SAE: Failed to create PO for supplier #%d (%s): %s', $supplier_id, $supplier_name, $result->get_error_message() ) );
-				$errors[] = sprintf(
-					/* translators: 1: supplier name, 2: error message */
-					__( 'Supplier %1$s: %2$s', 'serenisoft-atum-enhancer' ),
-					$supplier_name,
-					$result->get_error_message()
-				);
+				if ( is_wp_error( $result ) ) {
+					error_log( sprintf( 'SAE: Failed to create PO for supplier #%d (%s): %s', $supplier_id, $supplier_name, $result->get_error_message() ) );
+					$errors[] = sprintf(
+						/* translators: 1: supplier name, 2: error message */
+						__( 'Supplier %1$s: %2$s', 'serenisoft-atum-enhancer' ),
+						$supplier_name,
+						$result->get_error_message()
+					);
+				} else {
+					$supplier_duration = round( microtime( true ) - $supplier_start, 2 );
+					error_log( sprintf(
+						'SAE: PO created for supplier #%d (%s) - total time: %s seconds',
+						$supplier_id,
+						$supplier_name,
+						$supplier_duration
+					) );
+					$created_pos[] = $result;
+				}
 			} else {
-				$supplier_duration = round( microtime( true ) - $supplier_start, 2 );
-				error_log( sprintf(
-					'SAE: PO created for supplier #%d (%s) - total time: %s seconds',
-					$supplier_id,
-					$supplier_name,
-					$supplier_duration
-				) );
+				error_log( sprintf( 'SAE: DRY RUN - Would create PO for supplier #%d (%s) with %d products', $supplier_id, $supplier_name, count( $products_to_reorder ) ) );
+				$result        = $this->simulate_po_creation( $supplier_id, $supplier_name, $products_to_reorder );
 				$created_pos[] = $result;
 			}
 		}
@@ -305,8 +318,8 @@ class POSuggestionGenerator {
 		// Get products without supplier.
 		$products_without_supplier = $this->get_products_without_supplier();
 
-		// Send email notification if POs were created.
-		if ( ! empty( $created_pos ) ) {
+		// Send email notification if POs were created (skip in dry run mode).
+		if ( ! $dry_run && ! empty( $created_pos ) ) {
 			$this->send_notification_email( $created_pos );
 		}
 
@@ -319,10 +332,12 @@ class POSuggestionGenerator {
 			'total_products'            => $total_products,
 			'products_below_reorder'    => $products_below_reorder,
 			'products_without_supplier' => $products_without_supplier,
+			'dry_run'                   => $dry_run, // NEW: Indicate dry run mode.
 			'message'                   => sprintf(
-				/* translators: 1: created count, 2: skipped count, 3: choices count */
-				__( '%1$d PO suggestions created, %2$d suppliers skipped, %3$d need your choice.', 'serenisoft-atum-enhancer' ),
+				/* translators: 1: created count, 2: created/would be created, 3: skipped count, 4: choices count */
+				__( '%1$d PO suggestions %2$s, %3$d suppliers skipped, %4$d need your choice.', 'serenisoft-atum-enhancer' ),
 				count( $created_pos ),
+				$dry_run ? __( 'would be created', 'serenisoft-atum-enhancer' ) : __( 'created', 'serenisoft-atum-enhancer' ),
 				$skipped,
 				count( $choices )
 			),
@@ -487,6 +502,62 @@ class POSuggestionGenerator {
 			return new \WP_Error( 'po_exception', $e->getMessage() );
 		}
 
+	}
+
+	/**
+	 * Simulate PO creation without saving to database (DRY RUN mode)
+	 *
+	 * @since 0.6.0
+	 *
+	 * @param int    $supplier_id         Supplier ID.
+	 * @param string $supplier_name       Supplier name.
+	 * @param array  $products_to_reorder Array of product analysis data.
+	 *
+	 * @return array Simulated PO data.
+	 */
+	private function simulate_po_creation( $supplier_id, $supplier_name, $products_to_reorder ) {
+
+		$products_list = array();
+		$total         = 0;
+
+		foreach ( $products_to_reorder as $product_data ) {
+			$product = wc_get_product( $product_data['product_id'] );
+
+			if ( ! $product ) {
+				continue;
+			}
+
+			// Calculate item total (if purchase price available).
+			$purchase_price = isset( $product_data['purchase_price'] ) ? $product_data['purchase_price'] : 0;
+			$item_total     = $product_data['suggested_qty'] * $purchase_price;
+			$total         += $item_total;
+
+			$products_list[] = array(
+				'id'             => $product_data['product_id'],
+				'name'           => $product->get_name(),
+				'sku'            => $product->get_sku() ?: __( 'N/A', 'serenisoft-atum-enhancer' ),
+				'qty'            => $product_data['suggested_qty'],
+				'purchase_price' => $purchase_price,
+				'item_total'     => $item_total,
+				'reason'         => $product_data['reorder_reason'] ?? '',
+			);
+		}
+
+		return array(
+			'po_id'         => 0, // No actual PO created.
+			'supplier_id'   => $supplier_id,
+			'supplier_name' => $supplier_name,
+			'items_count'   => count( $products_to_reorder ),
+			'products'      => $products_list,
+			'total'         => $total,
+			'edit_url'      => '', // No URL for dry run.
+			'message'       => sprintf(
+				/* translators: 1: items count, 2: supplier name */
+				__( 'DRY RUN: Would create PO with %1$d items for %2$s', 'serenisoft-atum-enhancer' ),
+				count( $products_to_reorder ),
+				$supplier_name
+			),
+		);
 	}
 
 	/**
@@ -910,6 +981,15 @@ class POSuggestionGenerator {
 			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'serenisoft-atum-enhancer' ) ) );
 		}
 		error_log( 'SAE: ajax_execute_po_choice - Permission check OK' );
+
+		// Check if dry run mode is enabled.
+		$dry_run = 'yes' === \Atum\Inc\Helpers::get_option( 'sae_enable_dry_run', 'no' );
+
+		if ( $dry_run ) {
+			error_log( 'SAE: ajax_execute_po_choice - DRY RUN mode detected - choices should not be executed in dry run' );
+			wp_send_json_error( array( 'message' => __( 'Cannot execute choices in Dry Run mode. Please disable Dry Run Mode first.', 'serenisoft-atum-enhancer' ) ) );
+			return;
+		}
 
 		// Get choice data.
 		$supplier_id    = isset( $_POST['supplier_id'] ) ? absint( $_POST['supplier_id'] ) : 0;

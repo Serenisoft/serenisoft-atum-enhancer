@@ -2,6 +2,17 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.6.0] - 2025-12-10
+
+### Added
+- **Dry Run Mode**: New setting to preview PO generation without creating actual Purchase Orders
+  - Enable via "Enable Dry Run Mode" switch in PO Suggestions settings
+  - Shows detailed preview of what would be created (products, quantities, suppliers)
+  - Skips email notifications when in dry run mode
+  - Useful for testing algorithm logic without creating test data
+  - Warning-styled UI clearly indicates when in dry run mode
+  - Message changes from "created" to "would be created" in dry run mode
+
 ## [0.5.1] - 2025-12-10
 
 ### Fixed

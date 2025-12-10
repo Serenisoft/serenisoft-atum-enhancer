@@ -191,6 +191,15 @@ class Settings {
 			'default'  => $this->get_generate_button_html(),
 		);
 
+		$defaults['sae_enable_dry_run'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_po_suggestions',
+			'name'    => __( 'Enable Dry Run Mode', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'When enabled, PO generation will analyze and preview what would be created without actually creating Purchase Orders. Use this to test the algorithm without creating data.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'switcher',
+			'default' => 'no',
+		);
+
 		$defaults['sae_min_days_before_reorder'] = array(
 			'group'   => self::TAB_KEY,
 			'section' => 'sae_po_suggestions',
@@ -807,6 +816,7 @@ class Settings {
 			function showPoChoiceDialog(data) {
 				var html = '';
 				var $result = $('#sae-generate-result');
+				var isDryRun = data.dry_run || false;
 
 				// Build HTML for each supplier choice
 				$.each(data.choices_needed, function(index, choice) {
@@ -855,12 +865,42 @@ class Settings {
 				});
 
 				$('.sae-choices-container').html(html);
+
+				// Handle Execute Choices button based on dry run mode
+				if (isDryRun) {
+					// Hide the Execute Choices button in dry run mode
+					$('#sae-execute-choices').hide();
+
+					// Show dry run warning before Cancel button
+					var warningHtml = '<div class="sae-dry-run-warning" style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; margin-bottom: 15px;">';
+					warningHtml += '<strong>⚠️ <?php echo esc_js( __( 'Choice execution is disabled in Dry Run mode', 'serenisoft-atum-enhancer' ) ); ?></strong><br>';
+					warningHtml += '<?php echo esc_js( __( 'This is a preview only. Disable Dry Run Mode to execute choices and modify Purchase Orders.', 'serenisoft-atum-enhancer' ) ); ?>';
+					warningHtml += '</div>';
+					$('.sae-choice-actions').prepend(warningHtml);
+				} else {
+					// Show the Execute Choices button in normal mode
+					$('#sae-execute-choices').show();
+					$('.sae-dry-run-warning').remove();
+				}
+
 				$('.sae-choice-overlay').fadeIn(200);
 
 				// Also show auto-created results if any
 				if (data.created && data.created.length > 0) {
-					var html = '<div class="notice notice-success">';
-					html += '<p><?php echo esc_js( __( 'Auto-created', 'serenisoft-atum-enhancer' ) ); ?> ' + data.created.length + ' <?php echo esc_js( __( 'Purchase Orders for suppliers without existing POs.', 'serenisoft-atum-enhancer' ) ); ?></p>';
+					var isDryRun = data.dry_run || false;
+					var noticeClass = isDryRun ? 'notice-warning' : 'notice-success';
+					var html = '<div class="notice ' + noticeClass + '">';
+
+					if (isDryRun) {
+						html += '<p><strong>⚠️ <?php echo esc_js( __( 'DRY RUN - Preview Only', 'serenisoft-atum-enhancer' ) ); ?></strong></p>';
+						html += '<p>' + data.created.length + ' <?php echo esc_js( __( 'PO suggestions would be created for suppliers without existing POs.', 'serenisoft-atum-enhancer' ) ); ?></p>';
+						html += '<p style="color: #856404; background: #fff3cd; padding: 10px; border-left: 4px solid #ffc107; margin: 10px 0;">';
+						html += '<?php echo esc_js( __( 'ℹ️ No Purchase Orders were created. This is a preview. Disable Dry Run Mode to create actual POs.', 'serenisoft-atum-enhancer' ) ); ?>';
+						html += '</p>';
+					} else {
+						html += '<p><?php echo esc_js( __( 'Auto-created', 'serenisoft-atum-enhancer' ) ); ?> ' + data.created.length + ' <?php echo esc_js( __( 'Purchase Orders for suppliers without existing POs.', 'serenisoft-atum-enhancer' ) ); ?></p>';
+					}
+
 					html += '</div>';
 					$result.html(html);
 				}
@@ -869,8 +909,18 @@ class Settings {
 			// Show normal generation results
 			function showGenerationResults(data) {
 				var $result = $('#sae-generate-result');
-				var html = '<div class="notice notice-success">';
+				var isDryRun = data.dry_run || false;
+				var noticeClass = isDryRun ? 'notice-warning' : 'notice-success';
+
+				var html = '<div class="notice ' + noticeClass + '">';
 				html += '<p><strong>' + data.message + '</strong></p>';
+
+				// Dry run warning
+				if (isDryRun) {
+					html += '<p style="color: #856404; background: #fff3cd; padding: 10px; border-left: 4px solid #ffc107; margin: 15px 0;">';
+					html += '<?php echo esc_js( __( 'ℹ️ No Purchase Orders were created. This is a preview of what would be generated. Disable Dry Run Mode to create actual POs.', 'serenisoft-atum-enhancer' ) ); ?>';
+					html += '</p>';
+				}
 
 				// Statistics
 				html += '<h4><?php echo esc_js( __( 'Analysis Summary:', 'serenisoft-atum-enhancer' ) ); ?></h4>';
@@ -880,12 +930,20 @@ class Settings {
 				html += '<li><?php echo esc_js( __( 'Products below reorder point:', 'serenisoft-atum-enhancer' ) ); ?> <strong>' + data.products_below_reorder + '</strong></li>';
 				html += '</ul>';
 
-				// Created POs
+				// Created POs / Preview
 				if (data.created && data.created.length) {
-					html += '<h4><?php echo esc_js( __( 'Purchase Orders Created:', 'serenisoft-atum-enhancer' ) ); ?></h4>';
+					if (isDryRun) {
+						html += '<h4><?php echo esc_js( __( 'Preview - Would Create:', 'serenisoft-atum-enhancer' ) ); ?></h4>';
+					} else {
+						html += '<h4><?php echo esc_js( __( 'Purchase Orders Created:', 'serenisoft-atum-enhancer' ) ); ?></h4>';
+					}
 					html += '<ul>';
 					data.created.forEach(function(po) {
-						html += '<li><a href="' + po.edit_url + '" target="_blank">' + po.supplier_name + '</a> - ' + po.items_count + ' <?php echo esc_js( __( 'items', 'serenisoft-atum-enhancer' ) ); ?></li>';
+						if (isDryRun) {
+							html += '<li><strong>' + po.supplier_name + '</strong> - ' + po.items_count + ' <?php echo esc_js( __( 'items', 'serenisoft-atum-enhancer' ) ); ?></li>';
+						} else {
+							html += '<li><a href="' + po.edit_url + '" target="_blank">' + po.supplier_name + '</a> - ' + po.items_count + ' <?php echo esc_js( __( 'items', 'serenisoft-atum-enhancer' ) ); ?></li>';
+						}
 					});
 					html += '</ul>';
 				}
