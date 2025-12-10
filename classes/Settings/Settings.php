@@ -818,6 +818,9 @@ class Settings {
 				var $result = $('#sae-generate-result');
 				var isDryRun = data.dry_run || false;
 
+				// Store auto-created POs for later use in final summary
+				var autoCreatedPos = data.created || [];
+
 				// Build HTML for each supplier choice
 				$.each(data.choices_needed, function(index, choice) {
 					html += '<div class="sae-choice-item" data-supplier-id="' + choice.supplier_id + '">';
@@ -865,6 +868,9 @@ class Settings {
 				});
 
 				$('.sae-choices-container').html(html);
+
+				// Store auto-created POs as data attribute for later use in final summary
+				$('.sae-choice-overlay').data('auto-created-pos', autoCreatedPos);
 
 				// Handle Execute Choices button based on dry run mode
 				if (isDryRun) {
@@ -1009,9 +1015,10 @@ class Settings {
 
 				function executeNext(index) {
 					if (index >= choices.length) {
-						// All done
+						// All done - get auto-created POs and show combined results
+						var autoCreatedPos = $('.sae-choice-overlay').data('auto-created-pos') || [];
 						$('.sae-choice-overlay').fadeOut(200);
-						showFinalResults(results);
+						showFinalResults(results, autoCreatedPos);
 						return;
 					}
 
@@ -1051,11 +1058,12 @@ class Settings {
 			});
 
 			// Show final results after executing all choices
-			function showFinalResults(results) {
+			function showFinalResults(results, autoCreatedPos) {
 				var successCount = 0;
 				var errorCount = 0;
 				var createdPos = [];
 
+				// Count choice execution results
 				$.each(results, function(i, result) {
 					if (result.success) {
 						successCount++;
@@ -1064,9 +1072,29 @@ class Settings {
 						errorCount++;
 					}
 				});
+
+				// Combine auto-created and choice execution POs
+				var allPOs = (autoCreatedPos || []).concat(createdPos);
+				var totalPOs = allPOs.length;
+				var totalItems = 0;
+
+				// Calculate total items across all POs
+				$.each(allPOs, function(i, po) {
+					totalItems += po.items_count || 0;
+				});
+
 				var $result = $('#sae-generate-result');
 				var html = '<div class="notice notice-success">';
-				html += '<p><strong><?php echo esc_js( __( 'Choices Executed:', 'serenisoft-atum-enhancer' ) ); ?> ' + successCount + ' <?php echo esc_js( __( 'successful', 'serenisoft-atum-enhancer' ) ); ?>, ' + errorCount + ' <?php echo esc_js( __( 'errors', 'serenisoft-atum-enhancer' ) ); ?></strong></p>';
+				html += '<p><strong><?php echo esc_js( __( 'PO Generation Complete', 'serenisoft-atum-enhancer' ) ); ?></strong></p>';
+				html += '<p><?php echo esc_js( __( 'Total:', 'serenisoft-atum-enhancer' ) ); ?> <strong>' + totalPOs + ' <?php echo esc_js( __( 'Purchase Orders created with', 'serenisoft-atum-enhancer' ) ); ?> ' + totalItems + ' <?php echo esc_js( __( 'items', 'serenisoft-atum-enhancer' ) ); ?></strong></p>';
+
+				// Show breakdown if both types exist
+				if ((autoCreatedPos && autoCreatedPos.length > 0) && createdPos.length > 0) {
+					html += '<ul style="margin: 10px 0;">';
+					html += '<li>' + autoCreatedPos.length + ' <?php echo esc_js( __( 'POs auto-created for suppliers without existing orders', 'serenisoft-atum-enhancer' ) ); ?></li>';
+					html += '<li>' + createdPos.length + ' <?php echo esc_js( __( 'PO(s) created from choice execution', 'serenisoft-atum-enhancer' ) ); ?></li>';
+					html += '</ul>';
+				}
 
 				if (createdPos.length > 0) {
 					html += '<h4><?php echo esc_js( __( 'Results:', 'serenisoft-atum-enhancer' ) ); ?></h4>';
