@@ -605,24 +605,23 @@ class POSuggestionAlgorithm {
 
 		// Debug logging for seasonal adjustment
 		if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
+			$product = wc_get_product( $product_id );
+			$sku = $product ? ( $product->get_sku() ?: 'N/A' ) : 'N/A';
 			$month_names = [ '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' ];
 
-			error_log( sprintf(
-				'SAE DEBUG: [Seasonal] Product #%d | Coverage: %s to %s (%d days)',
-				$product_id,
-				date( 'M j', $coverage_start ),
-				date( 'M j', $coverage_end ),
-				$total_days
-			) );
-
-			// Log coverage months
+			// Build coverage months string
 			$coverage_parts = array();
 			foreach ( $month_coverage as $month_num => $days ) {
 				$coverage_parts[] = sprintf( '%s:%dd', $month_names[ $month_num ], $days );
 			}
+
+			// Combined coverage and months line
 			error_log( sprintf(
-				'SAE DEBUG: [Seasonal] Product #%d | Months covered: %s',
-				$product_id,
+				'SAE DEBUG: [Seasonal] [%s] Coverage: %s to %s (%d days) | Months: %s',
+				$sku,
+				date( 'M j', $coverage_start ),
+				date( 'M j', $coverage_end ),
+				$total_days,
 				implode( ', ', $coverage_parts )
 			) );
 
@@ -633,16 +632,16 @@ class POSuggestionAlgorithm {
 			}
 			if ( ! empty( $sales_parts ) ) {
 				error_log( sprintf(
-					'SAE DEBUG: [Seasonal] Product #%d | Historical sales: %s (total: %d)',
-					$product_id,
+					'SAE DEBUG: [Seasonal] [%s] Historical sales: %s (total: %d)',
+					$sku,
 					implode( ', ', $sales_parts ),
 					(int) $total_sales
 				) );
 			}
 
 			error_log( sprintf(
-				'SAE DEBUG: [Seasonal] Product #%d | Factor: %.2fx (capped 0.5-4.0) | Avg: %.2f → %.2f units/day',
-				$product_id,
+				'SAE DEBUG: [Seasonal] [%s] Factor: %.2fx | Avg: %.2f → %.2f units/day',
+				$sku,
 				$seasonal_factor,
 				$avg_daily,
 				$adjusted_avg
