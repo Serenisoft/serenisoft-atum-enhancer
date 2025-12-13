@@ -1,6 +1,6 @@
 # SereniSoft ATUM Enhancer
 
-Extends ATUM Inventory Management for WooCommerce with intelligent purchase order suggestions based on stock levels, lead times, and sales patterns.
+Extends ATUM Inventory Management for WooCommerce with intelligent purchase order suggestions based on stock levels, lead times, seasonal patterns, and supplier closed periods.
 
 ## Features
 
@@ -71,6 +71,56 @@ Upload CSV files with semicolon-separated values:
 ```
 Leverandornummer;Navn;Organisasjonsnummer;Telefonnummer;E-postadresse;Postadresse;Postnr.;Sted;Land
 ```
+
+## Algorithm Parameters Summary
+
+All parameters that affect the ordering calculation:
+
+### Global Settings (ATUM Settings → Enhancer)
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| Orders Per Year | 4 | How often to order from each supplier (determines days of stock target) |
+| Minimum Days Between Orders | 10 | Prevents too frequent orders to the same supplier |
+| Service Level | 95% | Target in-stock percentage (90%, 95%, 99%) - affects safety stock |
+| Include Seasonal Analysis | Yes | Adjusts for monthly sales patterns using future-looking analysis |
+| Enable Predictive Ordering | Yes | Two-pass system that orders proactively before stockouts |
+| Safety Margin (%) | 15% | Include products within this % above reorder point (Pass 2) |
+| Time-Based Prediction | Yes | Include products reaching ROP within 2× lead time (Pass 2) |
+
+### Closed Periods Settings
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| Global Closed Period Presets | - | Define common closure periods (holidays, vacations) |
+| Buffer Before Closure | 14 days | Safety margin before official closure (pre-holiday delays) |
+| Buffer After Closure | 14 days | Factory ramp-up time after reopening |
+
+### Per-Supplier Settings (Supplier Edit Screen)
+
+| Parameter | Source | Description |
+|-----------|--------|-------------|
+| Lead Time | ATUM Supplier | Days from order to delivery (critical for all calculations) |
+| Orders Per Year Override | Enhancer Settings | Override global orders/year for this supplier |
+| Closed Periods | Enhancer Settings | Select global presets or add custom periods |
+
+### Derived Values (Calculated)
+
+| Value | Formula | Description |
+|-------|---------|-------------|
+| Days of Stock Target | 365 ÷ Orders Per Year | How many days of stock each order should cover |
+| Reorder Point (ROP) | (Avg Daily Sales × Lead Time) + Safety Stock | When to trigger reorder |
+| Safety Stock | Z-score × Std Dev × √Lead Time | Buffer against demand variability |
+| Optimal Inventory | (Avg Daily Sales × Days of Stock) + Safety Stock | Target stock level |
+| Effective Stock | Current Stock + Inbound Stock | Available + on-order quantities |
+
+### Adjustment Factors
+
+| Factor | Range | Description |
+|--------|-------|-------------|
+| Trend Factor | - | 70% recent (30 days), 30% historical |
+| Seasonal Factor | 0.5x - 4.0x | Based on future coverage period analysis |
+| Global Cap | 0.4x - 10x | Safety net on total adjustments |
 
 ## Algorithm Details
 

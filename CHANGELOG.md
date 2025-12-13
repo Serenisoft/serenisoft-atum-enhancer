@@ -2,6 +2,22 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.2] - 2025-12-13
+
+### Fixed
+- **Order Quantity Calculation**: Fixed critical bug where suggested order quantities were incorrect
+  - Previous: Calculated `optimal_stock - current_stock` (assumed immediate delivery)
+  - Fixed: Now calculates `optimal_stock - stock_at_arrival` (accounts for lead time consumption)
+  - Example: Product with 62 stock, 0.43 daily sales, 92-day lead time
+    - Old calculation: 58 - 62 = -4 → 1 unit (wrong!)
+    - New calculation: 58 - 22.9 (stock at arrival) = 36 units (correct!)
+  - Orders now properly cover the target period (e.g., 3 months for 4 orders/year)
+
+### Improved
+- **Debug Logging**: Order calculation now shows projected stock at arrival
+  - Format: `Order Calc: X optimal - Y stock@arrival (Z consumed in Nd) = Q suggested`
+  - Makes it easier to verify the algorithm is working correctly
+
 ## [0.9.1] - 2025-12-13
 
 ### Added

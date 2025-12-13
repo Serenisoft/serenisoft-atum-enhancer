@@ -18,6 +18,7 @@ defined( 'ABSPATH' ) || die;
 
 use SereniSoft\AtumEnhancer\Settings\Settings;
 use SereniSoft\AtumEnhancer\Suppliers\SupplierFields;
+use SereniSoft\AtumEnhancer\Components\ClosedPeriodsHelper;
 use Atum\Suppliers\Supplier;
 use Atum\Suppliers\Suppliers;
 
@@ -65,8 +66,6 @@ class POSuggestionAlgorithm {
 		}
 
 		// CLOSED PERIODS - TYPE A: Adjust lead time if delivery falls in closed period.
-		use SereniSoft\AtumEnhancer\Components\ClosedPeriodsHelper;
-
 		// Log closed periods configuration for this supplier.
 		if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
 			$buffer_before = (int) Settings::get( 'sae_closure_buffer_before', 14 );
@@ -234,15 +233,18 @@ class POSuggestionAlgorithm {
 				$reorder_point
 			) );
 
-			// Log order quantity calculation
+			// Log order quantity calculation (accounts for lead time consumption)
+			$preview_stock_at_arrival = $effective_stock - ( $avg_daily_sales * $lead_time );
+			$preview_qty              = max( 1, ceil( $optimal_stock - $preview_stock_at_arrival ) );
 			error_log( sprintf(
-				'SAE DEBUG: [Pass 1] [%s] %s | Order Calc: %d optimal - %d current - %d inbound = %d suggested',
+				'SAE DEBUG: [Pass 1] [%s] %s | Order Calc: %d optimal - %.1f stock@arrival (%.1f consumed in %dd) = %d suggested',
 				$sku,
 				$product->get_name(),
 				$optimal_stock,
-				$current_stock,
-				$inbound_stock,
-				max( 1, $optimal_stock - $effective_stock )
+				$preview_stock_at_arrival,
+				$avg_daily_sales * $lead_time,
+				$lead_time,
+				$preview_qty
 			) );
 
 			// Log decision
@@ -282,8 +284,10 @@ class POSuggestionAlgorithm {
 		$needs_reorder = ( $at_or_below_rop || $within_safety_margin || $will_reach_rop_soon || $needs_closure_order ) && $avg_daily_sales > 0;
 
 		// Calculate suggested quantity to bring stock up to optimal level.
+		// Account for stock consumed during lead time - we need optimal stock WHEN ORDER ARRIVES.
 		if ( $needs_reorder ) {
-			$base_qty = max( 1, $optimal_stock - $effective_stock );
+			$stock_at_arrival = $effective_stock - ( $avg_daily_sales * $lead_time );
+			$base_qty         = max( 1, ceil( $optimal_stock - $stock_at_arrival ) );
 
 			// Add extra quantity for closed period buffer
 			if ( $needs_closure_order ) {
