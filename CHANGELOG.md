@@ -2,6 +2,12 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.13] - 2025-12-13
+
+### Fixed
+- **Supplier PO Note on PDF**: Moved supplier note from Notes metabox to PDF Notes section
+  - Changed from `add_order_note()` to `set_description()` so note appears on generated PDF
+
 ## [0.9.12] - 2025-12-13
 
 ### Fixed

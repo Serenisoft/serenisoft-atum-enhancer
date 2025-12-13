@@ -412,11 +412,11 @@ class POSuggestionGenerator {
 				return new \WP_Error( 'po_create_failed', __( 'Failed to create Purchase Order.', 'serenisoft-atum-enhancer' ) );
 			}
 
-			// Add supplier PO note if set.
+			// Add supplier PO note to description (shows on PDF).
 			$supplier_note = SupplierFields::get_po_note( $supplier_id );
 			if ( ! empty( $supplier_note ) ) {
-				error_log( sprintf( 'SAE: create_po_for_supplier - Adding supplier note: %s', substr( $supplier_note, 0, 50 ) ) );
-				$po->add_order_note( $supplier_note );
+				$po->set_description( $supplier_note );
+				$po->save();
 			}
 
 			// Add products to PO.
