@@ -281,25 +281,23 @@ class SalesDataColumns {
 		<script type="text/javascript">
 		jQuery(function($) {
 			var saeSalesNonce = '<?php echo esc_js( $nonce ); ?>';
+			var saeFetching = false;
 
-			$(document).on('click', '#sae-fetch-sales-btn', function(e) {
-				e.preventDefault();
+			// Reusable function to fetch sales data.
+			function saeFetchSalesData() {
+				if (saeFetching) return;
 
-				var $btn = $(this);
-				var originalText = $btn.text();
-
-				// Collect product IDs from visible rows.
 				var productIds = [];
 				$('.atum-list-wrapper table tbody tr[data-id]').each(function() {
 					productIds.push($(this).data('id'));
 				});
 
-				if (productIds.length === 0) {
-					alert('No products found on this page.');
-					return;
-				}
+				if (productIds.length === 0) return;
 
-				// Visual feedback.
+				saeFetching = true;
+				var $btn = $('#sae-fetch-sales-btn');
+				var originalText = $btn.text();
+
 				$btn.text('Loading...').prop('disabled', true);
 				$('.sae-sales-year, .sae-sales-period').text('...');
 
@@ -309,6 +307,7 @@ class SalesDataColumns {
 					product_ids: productIds
 				}, function(response) {
 					$btn.text(originalText).prop('disabled', false);
+					saeFetching = false;
 
 					if (response.success && response.data.sales) {
 						$.each(response.data.sales, function(productId, data) {
@@ -317,14 +316,29 @@ class SalesDataColumns {
 						});
 					} else {
 						$('.sae-sales-year, .sae-sales-period').text('-');
-						alert('Failed to fetch sales data');
 					}
 				}).fail(function() {
 					$btn.text(originalText).prop('disabled', false);
+					saeFetching = false;
 					$('.sae-sales-year, .sae-sales-period').text('-');
-					alert('Error fetching sales data');
 				});
+			}
+
+			// Manual button click.
+			$(document).on('click', '#sae-fetch-sales-btn', function(e) {
+				e.preventDefault();
+				saeFetchSalesData();
 			});
+
+			// Auto-fetch on initial page load.
+			setTimeout(saeFetchSalesData, 500);
+
+			// Auto-fetch when ATUM updates the table (pagination, filtering, sorting).
+			if (typeof wp !== 'undefined' && wp.hooks) {
+				wp.hooks.addAction('atum_listTable_tableUpdated', 'sae', function() {
+					setTimeout(saeFetchSalesData, 100);
+				});
+			}
 		});
 		</script>
 		<?php

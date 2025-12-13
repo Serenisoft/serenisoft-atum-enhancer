@@ -9,7 +9,7 @@
  * Requires Plugins:     woocommerce, atum-stock-manager-for-woocommerce
  * Plugin URI:           https://serenisoft.no/
  * Description:          Extends ATUM Inventory Management with automatic purchase order suggestions based on stock levels, lead times, seasonal patterns, and supplier closed periods.
- * Version:              0.9.8
+ * Version:              0.9.9
  * Author:               SereniSoft
  * Author URI:           https://serenisoft.no/
  * Requires at least:    5.9
@@ -26,7 +26,7 @@
 defined( 'ABSPATH' ) || die;
 
 if ( ! defined( 'SAE_VERSION' ) ) {
-	define( 'SAE_VERSION', '0.9.8' );
+	define( 'SAE_VERSION', '0.9.9' );
 }
 
 if ( ! defined( 'SAE_PHP_MINIMUM_VERSION' ) ) {

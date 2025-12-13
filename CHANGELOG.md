@@ -2,6 +2,15 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.9] - 2025-12-13
+
+### Added
+- **Auto-fetch Sales Data in Stock Central**: Sales columns now load automatically
+  - Fetches data on initial page load (no manual button click required)
+  - Automatically updates when paginating, filtering, or sorting
+  - Uses ATUM's `atum_listTable_tableUpdated` hook for reliable detection
+  - Manual "Fetch Sales Data" button still available as fallback
+
 ## [0.9.8] - 2025-12-13
 
 ### Added
