@@ -42,8 +42,6 @@ class SalesDataColumns {
 		add_filter( 'atum/list_table/column_default__sae_sales_year', array( $this, 'render_sales_year_column' ), 10, 4 );
 		add_filter( 'atum/list_table/column_default__sae_sales_period', array( $this, 'render_sales_period_column' ), 10, 4 );
 
-		// Add button to page title area.
-		add_action( 'atum/stock_central_list/page_title_buttons', array( $this, 'add_fetch_button' ) );
 
 		// Handle AJAX fetch for sales data.
 		add_action( 'wp_ajax_sae_fetch_sales_data', array( $this, 'ajax_fetch_sales_data' ) );
@@ -139,20 +137,6 @@ class SalesDataColumns {
 
 	}
 
-	/**
-	 * Add fetch button to page title area
-	 *
-	 * @since 0.9.5
-	 */
-	public function add_fetch_button() {
-
-		?>
-		<button type="button" id="sae-fetch-sales-btn" class="page-title-action">
-			<?php esc_html_e( 'Fetch Sales Data', 'serenisoft-atum-enhancer' ); ?>
-		</button>
-		<?php
-
-	}
 
 	/**
 	 * AJAX handler to fetch sales data for products
@@ -283,7 +267,7 @@ class SalesDataColumns {
 			var saeSalesNonce = '<?php echo esc_js( $nonce ); ?>';
 			var saeFetching = false;
 
-			// Reusable function to fetch sales data.
+			// Fetch sales data for visible products.
 			function saeFetchSalesData() {
 				if (saeFetching) return;
 
@@ -295,10 +279,6 @@ class SalesDataColumns {
 				if (productIds.length === 0) return;
 
 				saeFetching = true;
-				var $btn = $('#sae-fetch-sales-btn');
-				var originalText = $btn.text();
-
-				$btn.text('Loading...').prop('disabled', true);
 				$('.sae-sales-year, .sae-sales-period').text('...');
 
 				$.post(ajaxurl, {
@@ -306,7 +286,6 @@ class SalesDataColumns {
 					security: saeSalesNonce,
 					product_ids: productIds
 				}, function(response) {
-					$btn.text(originalText).prop('disabled', false);
 					saeFetching = false;
 
 					if (response.success && response.data.sales) {
@@ -318,17 +297,10 @@ class SalesDataColumns {
 						$('.sae-sales-year, .sae-sales-period').text('-');
 					}
 				}).fail(function() {
-					$btn.text(originalText).prop('disabled', false);
 					saeFetching = false;
 					$('.sae-sales-year, .sae-sales-period').text('-');
 				});
 			}
-
-			// Manual button click.
-			$(document).on('click', '#sae-fetch-sales-btn', function(e) {
-				e.preventDefault();
-				saeFetchSalesData();
-			});
 
 			// Auto-fetch on initial page load.
 			setTimeout(saeFetchSalesData, 500);
