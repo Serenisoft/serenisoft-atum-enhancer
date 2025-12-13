@@ -40,8 +40,8 @@ class StockCentralColumns {
 		// Render MOQ column value.
 		add_filter( 'atum/list_table/column_default__sae_moq', array( $this, 'render_moq_column' ), 10, 4 );
 
-		// Handle AJAX save for MOQ.
-		add_filter( 'atum/product_data', array( $this, 'save_moq_via_atum' ), 10, 2 );
+		// Handle AJAX save for MOQ (direct save).
+		add_action( 'wp_ajax_sae_save_moq', array( $this, 'ajax_save_moq' ) );
 
 		// Add scripts for Stock Central.
 		add_action( 'admin_footer', array( $this, 'add_inline_script' ) );
@@ -115,38 +115,39 @@ class StockCentralColumns {
 
 		// Direct input field for easy bulk editing.
 		return sprintf(
-			'<input type="number" class="sae-moq-input" data-meta="sae_moq" value="%s" min="1" step="1" placeholder="1" style="width:50px;text-align:center;">',
+			'<input type="number" class="sae-moq-input" data-meta="sae_moq" value="%s" min="1" step="1" placeholder="1" style="width:65px;text-align:center;">',
 			$moq > 1 ? esc_attr( $moq ) : ''
 		);
 
 	}
 
 	/**
-	 * Save MOQ when ATUM saves product data
+	 * AJAX handler to save MOQ directly
 	 *
 	 * @since 0.9.3
-	 *
-	 * @param array $product_data Product data to save.
-	 * @param int   $product_id   Product ID.
-	 *
-	 * @return array
 	 */
-	public function save_moq_via_atum( $product_data, $product_id ) {
+	public function ajax_save_moq() {
 
-		if ( isset( $product_data['sae_moq'] ) ) {
-			$moq = absint( $product_data['sae_moq'] );
+		check_ajax_referer( 'sae_save_moq', 'security' );
 
-			if ( $moq > 1 ) {
-				update_post_meta( $product_id, ProductFields::META_MOQ, $moq );
-			} else {
-				delete_post_meta( $product_id, ProductFields::META_MOQ );
-			}
-
-			// Remove from array so ATUM doesn't try to handle it.
-			unset( $product_data['sae_moq'] );
+		if ( ! current_user_can( 'edit_products' ) ) {
+			wp_send_json_error( 'Permission denied' );
 		}
 
-		return $product_data;
+		$product_id = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
+		$moq        = isset( $_POST['moq'] ) ? absint( $_POST['moq'] ) : 0;
+
+		if ( ! $product_id ) {
+			wp_send_json_error( 'Invalid product ID' );
+		}
+
+		if ( $moq > 1 ) {
+			update_post_meta( $product_id, ProductFields::META_MOQ, $moq );
+		} else {
+			delete_post_meta( $product_id, ProductFields::META_MOQ );
+		}
+
+		wp_send_json_success( array( 'moq' => $moq ) );
 
 	}
 
@@ -159,38 +160,44 @@ class StockCentralColumns {
 
 		$screen = get_current_screen();
 
-		if ( ! $screen || 'toplevel_page_stock-central' !== $screen->id ) {
+		if ( ! $screen || 'atum-inventory_page_atum-stock-central' !== $screen->id ) {
 			return;
 		}
 
+		$nonce = wp_create_nonce( 'sae_save_moq' );
 		?>
 		<script type="text/javascript">
 		jQuery(function($) {
-			// Track changes in MOQ input fields.
+			var saeMoqNonce = '<?php echo esc_js( $nonce ); ?>';
+
+			// Save MOQ on change (when leaving field).
 			$(document).on('change', '.sae-moq-input', function() {
 				var $input = $(this);
 				var $row = $input.closest('tr');
+				var productId = $row.data('id');
+				var moqValue = $input.val() || '';
 
-				// Mark the row as edited (ATUM's pattern).
-				$row.addClass('dirty');
+				// Visual feedback.
+				$input.css('opacity', '0.5');
 
-				// Ensure ATUM knows this field changed.
-				$input.attr('data-changed', 'yes');
-			});
-
-			// Before ATUM collects data, add our MOQ values.
-			$(document).on('atum-edited-cols-data', function(e, editedCols, $rows) {
-				$rows.each(function() {
-					var $row = $(this);
-					var productId = $row.data('id');
-					var $moqInput = $row.find('.sae-moq-input');
-
-					if ($moqInput.length && $moqInput.attr('data-changed') === 'yes') {
-						if (!editedCols[productId]) {
-							editedCols[productId] = {};
-						}
-						editedCols[productId].sae_moq = $moqInput.val() || '1';
+				$.post(ajaxurl, {
+					action: 'sae_save_moq',
+					security: saeMoqNonce,
+					product_id: productId,
+					moq: moqValue
+				}, function(response) {
+					$input.css('opacity', '1');
+					if (response.success) {
+						$input.css('border-color', '#46b450');
+						setTimeout(function() {
+							$input.css('border-color', '#ddd');
+						}, 1000);
+					} else {
+						$input.css('border-color', '#dc3232');
 					}
+				}).fail(function() {
+					$input.css('opacity', '1');
+					$input.css('border-color', '#dc3232');
 				});
 			});
 		});
@@ -200,6 +207,7 @@ class StockCentralColumns {
 			border: 1px solid #ddd;
 			border-radius: 3px;
 			padding: 2px 4px;
+			transition: border-color 0.3s, opacity 0.2s;
 		}
 		.sae-moq-input:focus {
 			border-color: #00a8f0;

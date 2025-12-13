@@ -2,6 +2,16 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.4] - 2025-12-13
+
+### Fixed
+- **MOQ Column in Stock Central**: Fixed script not loading due to incorrect screen ID check
+  - Changed from `toplevel_page_atum-stock-central` to `atum-inventory_page_atum-stock-central`
+  - MOQ input field now works correctly for inline editing and saving
+
+### Changed
+- Removed debug logging from MOQ save handler (PHP and JavaScript)
+
 ## [0.9.3] - 2025-12-13
 
 ### Added
