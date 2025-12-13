@@ -35,8 +35,8 @@ class POEmailSender {
 	 */
 	private function __construct() {
 
-		// Add "Send to Supplier" button to PO edit page.
-		add_filter( 'atum/atum_purchase_order/admin_order_actions', array( $this, 'add_send_email_action' ), 10, 2 );
+		// Add "Send to Supplier" button to PO edit page Actions metabox.
+		add_action( 'atum/atum_order/actions_meta_box_end', array( $this, 'add_send_email_button' ) );
 
 		// Add inline scripts for the PO edit page.
 		add_action( 'admin_footer', array( $this, 'print_email_scripts' ) );
@@ -47,49 +47,46 @@ class POEmailSender {
 	}
 
 	/**
-	 * Add "Send to Supplier" action button to PO edit page
+	 * Add "Send to Supplier" button to PO edit page Actions metabox
 	 *
 	 * @since 0.9.14
 	 *
-	 * @param array                                       $actions        Current actions.
-	 * @param \Atum\PurchaseOrders\Models\PurchaseOrder   $purchase_order The PO object.
-	 *
-	 * @return array
+	 * @param int $post_id The post ID.
 	 */
-	public function add_send_email_action( $actions, $purchase_order ) {
+	public function add_send_email_button( $post_id ) {
+
+		// Only for Purchase Orders.
+		if ( 'atum_purchase_order' !== get_post_type( $post_id ) ) {
+			return;
+		}
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			return $actions;
+			return;
 		}
 
-		// Only show on edit page, not on list page.
-		$screen = get_current_screen();
-		if ( $screen && 'edit' === $screen->base ) {
-			return $actions; // We're on the list page, don't add button.
-		}
+		// Get PO and check for supplier.
+		$po          = new \Atum\PurchaseOrders\Models\PurchaseOrder( $post_id );
+		$supplier_id = $po->get_supplier( 'id' );
 
-		// Check if supplier has email.
-		$supplier_id = $purchase_order->get_supplier( 'id' );
 		if ( ! $supplier_id ) {
-			return $actions;
+			return;
 		}
 
 		$supplier = new Supplier( $supplier_id );
 		$email    = $supplier->ordering_email ?: $supplier->general_email;
 
 		if ( empty( $email ) ) {
-			return $actions;
+			return;
 		}
 
-		$actions['send_email'] = array(
-			'url'    => '#',
-			'name'   => __( 'Send to Supplier', 'serenisoft-atum-enhancer' ),
-			'action' => 'send_email sae-send-po-email',
-			'target' => '_self',
-			'icon'   => '<i class="atum-icon atmi-envelope"></i>',
-		);
-
-		return $actions;
+		?>
+		<li class="wide">
+			<a class="button button-secondary sae-send-po-email" href="#">
+				<i class="atum-icon atmi-envelope"></i>
+				<?php esc_html_e( 'Send to Supplier', 'serenisoft-atum-enhancer' ); ?>
+			</a>
+		</li>
+		<?php
 
 	}
 
@@ -216,12 +213,13 @@ class POEmailSender {
 			margin: 10px 0 0;
 			font-size: 16px;
 		}
-		/* Style for the send email action button */
-		.atum-order-actions .send_email {
-			color: #2271b1 !important;
+		/* Style for the send email button in Actions metabox */
+		.sae-send-po-email {
+			width: 100%;
+			text-align: center;
 		}
-		.atum-order-actions .send_email:hover {
-			color: #135e96 !important;
+		.sae-send-po-email i {
+			margin-right: 5px;
 		}
 		</style>
 
@@ -232,7 +230,7 @@ class POEmailSender {
 			var ajaxUrl = '<?php echo esc_js( $ajax_url ); ?>';
 
 			// Handle click on "Send to Supplier" button.
-			$(document).on('click', '.sae-send-po-email, a.send_email', function(e) {
+			$(document).on('click', '.sae-send-po-email', function(e) {
 				e.preventDefault();
 
 				// First, get supplier email via AJAX.
