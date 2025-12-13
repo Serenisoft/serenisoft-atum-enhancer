@@ -2,6 +2,13 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.11] - 2025-12-13
+
+### Added
+- **PO PDF Settings**: New settings section for Purchase Order PDF customization
+  - "Hide Backordered on PDF" toggle to remove Backordered field from PDF exports
+  - Uses ATUM's `atum/atum_order/po_report/hidden_item_meta` filter
+
 ## [0.9.10] - 2025-12-13
 
 ### Changed

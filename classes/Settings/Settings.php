@@ -52,6 +52,9 @@ class Settings {
 		// AJAX handler for saving closed periods (bypasses ATUM's HTML field limitation).
 		add_action( 'wp_ajax_sae_save_closed_periods', array( $this, 'ajax_save_closed_periods' ) );
 
+		// Filter to hide backordered on PO PDF.
+		add_filter( 'atum/atum_order/po_report/hidden_item_meta', array( $this, 'filter_po_pdf_hidden_meta' ) );
+
 	}
 
 	/**
@@ -72,6 +75,7 @@ class Settings {
 				'sae_po_suggestions'      => __( 'PO Suggestions', 'serenisoft-atum-enhancer' ),
 				'sae_predictive_ordering' => __( 'Predictive Ordering', 'serenisoft-atum-enhancer' ),
 				'sae_closed_periods'      => __( 'Closed Periods', 'serenisoft-atum-enhancer' ),
+				'sae_po_pdf'              => __( 'PO PDF', 'serenisoft-atum-enhancer' ),
 				'sae_supplier_import'     => __( 'Supplier Import', 'serenisoft-atum-enhancer' ),
 			),
 		);
@@ -335,6 +339,16 @@ class Settings {
 				'max'  => 30,
 				'step' => 1,
 			),
+		);
+
+		// PO PDF Settings.
+		$defaults['sae_hide_backordered_on_pdf'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_po_pdf',
+			'name'    => __( 'Hide Backordered on PDF', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Hide the "Backordered" field from Purchase Order PDF exports.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'switcher',
+			'default' => 'no',
 		);
 
 		return $defaults;
@@ -603,6 +617,25 @@ class Settings {
 		update_option( 'sae_global_closed_periods', $sanitized );
 
 		wp_send_json_success( array( 'message' => __( 'Closed periods saved.', 'serenisoft-atum-enhancer' ) ) );
+
+	}
+
+	/**
+	 * Filter hidden item meta on PO PDF exports
+	 *
+	 * @since 0.9.11
+	 *
+	 * @param array $hidden_meta Array of meta keys to hide.
+	 *
+	 * @return array Modified array of hidden meta keys.
+	 */
+	public function filter_po_pdf_hidden_meta( $hidden_meta ) {
+
+		if ( 'yes' === self::get( 'hide_backordered_on_pdf', 'no' ) ) {
+			$hidden_meta[] = 'backordered';
+		}
+
+		return $hidden_meta;
 
 	}
 
