@@ -22,6 +22,7 @@ use SereniSoft\AtumEnhancer\PurchaseOrderSuggestions\POSuggestionGenerator;
 use SereniSoft\AtumEnhancer\BulkActions\BulkSupplierAssignment;
 use SereniSoft\AtumEnhancer\StockCentral\StockCentralColumns;
 use SereniSoft\AtumEnhancer\StockCentral\SalesDataColumns;
+use SereniSoft\AtumEnhancer\PurchaseOrders\POListButton;
 
 class Bootstrap {
 
@@ -111,6 +112,9 @@ class Bootstrap {
 
 		// Initialize Stock Central Sales Data Columns.
 		SalesDataColumns::get_instance();
+
+		// Initialize PO List Button.
+		POListButton::get_instance();
 
 	}
 

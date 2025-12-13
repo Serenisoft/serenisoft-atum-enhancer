@@ -2,6 +2,19 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.7] - 2025-12-13
+
+### Added
+- **Generate PO Button on Purchase Orders Page**: Added "Generate PO Suggestions" button next to "Add New" on ATUM's Purchase Orders list page
+  - Same functionality as the button in Settings
+  - Includes confirmation modal, PO choice dialog, and result notifications
+  - Makes PO generation more accessible without navigating to Settings
+
+### Technical Details
+- New class `POListButton` in `classes/PurchaseOrders/`
+- Hooks into `load-edit.php` for the `atum_purchase_order` post type
+- Injects button via jQuery, reuses existing AJAX handlers
+
 ## [0.9.6] - 2025-12-13
 
 ### Fixed
