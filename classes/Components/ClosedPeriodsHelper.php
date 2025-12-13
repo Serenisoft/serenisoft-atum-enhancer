@@ -11,6 +11,8 @@
 
 namespace SereniSoft\AtumEnhancer\Components;
 
+use SereniSoft\AtumEnhancer\Settings\Settings;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -126,6 +128,16 @@ class ClosedPeriodsHelper {
 				'crosses_year'  => $start_mm_dd > $end_mm_dd,
 			);
 		}
+
+		// Apply global buffers to extend effective closure periods.
+		$buffer_before = (int) Settings::get( 'sae_closure_buffer_before', 14 ) * DAY_IN_SECONDS;
+		$buffer_after  = (int) Settings::get( 'sae_closure_buffer_after', 14 ) * DAY_IN_SECONDS;
+
+		foreach ( $normalized as &$period ) {
+			$period['closure_start'] -= $buffer_before;
+			$period['closure_end']   += $buffer_after;
+		}
+		unset( $period ); // Break reference.
 
 		return $normalized;
 	}

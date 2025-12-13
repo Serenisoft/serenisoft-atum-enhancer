@@ -67,6 +67,42 @@ class POSuggestionAlgorithm {
 		// CLOSED PERIODS - TYPE A: Adjust lead time if delivery falls in closed period.
 		use SereniSoft\AtumEnhancer\Components\ClosedPeriodsHelper;
 
+		// Log closed periods configuration for this supplier.
+		if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
+			$buffer_before = (int) Settings::get( 'sae_closure_buffer_before', 14 );
+			$buffer_after  = (int) Settings::get( 'sae_closure_buffer_after', 14 );
+			$closed_periods = ClosedPeriodsHelper::get_supplier_closed_periods( $supplier_id );
+
+			if ( ! empty( $closed_periods ) ) {
+				error_log( sprintf(
+					'SAE DEBUG: [Closed Periods] Supplier #%d | Buffer: %d days before, %d days after | Periods found: %d',
+					$supplier_id,
+					$buffer_before,
+					$buffer_after,
+					count( $closed_periods ) / 2 // Divided by 2 because we store current year + next year.
+				) );
+
+				// Log each unique period (skip duplicates from next year).
+				$logged_ids = array();
+				foreach ( $closed_periods as $period ) {
+					$period_id = $period['id'] . '_' . $period['start_date'];
+					if ( in_array( $period_id, $logged_ids, true ) ) {
+						continue;
+					}
+					$logged_ids[] = $period_id;
+
+					error_log( sprintf(
+						'SAE DEBUG: [Closed Periods]   → %s: %s to %s (effective: %s to %s)',
+						$period['name'],
+						$period['start_date'],
+						$period['end_date'],
+						gmdate( 'd-M', $period['closure_start'] ),
+						gmdate( 'd-M', $period['closure_end'] )
+					) );
+				}
+			}
+		}
+
 		$lead_time_adjustment = ClosedPeriodsHelper::get_adjusted_lead_time( $supplier_id, $lead_time );
 		if ( $lead_time_adjustment['adjusted_lead_time'] > $lead_time ) {
 			$original_lead_time = $lead_time;

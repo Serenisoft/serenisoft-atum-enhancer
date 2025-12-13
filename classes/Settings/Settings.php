@@ -307,6 +307,36 @@ class Settings {
 			'default' => '',
 		);
 
+		// Buffer before closure - safety margin for pre-holiday delays.
+		$defaults['sae_closure_buffer_before'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_closed_periods',
+			'name'    => __( 'Buffer Before Closure (Days)', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Safety margin before official closure. Accounts for pre-holiday delivery delays when suppliers rush to clear orders.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'number',
+			'default' => 14,
+			'options' => array(
+				'min'  => 0,
+				'max'  => 30,
+				'step' => 1,
+			),
+		);
+
+		// Buffer after closure - factory ramp-up time.
+		$defaults['sae_closure_buffer_after'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_closed_periods',
+			'name'    => __( 'Buffer After Closure (Days)', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Factory ramp-up time after reopening. Accounts for post-holiday startup delays before normal production resumes.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'number',
+			'default' => 14,
+			'options' => array(
+				'min'  => 0,
+				'max'  => 30,
+				'step' => 1,
+			),
+		);
+
 		return $defaults;
 
 	}

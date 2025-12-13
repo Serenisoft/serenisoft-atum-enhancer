@@ -32,8 +32,9 @@ Extends ATUM Inventory Management for WooCommerce with intelligent purchase orde
 - **Year-Crossing Support**: Automatically handles periods like "20-12 to 05-01" (Christmas)
 - **Type A - Delivery Adjustment**: Extends lead time if delivery falls during closure
 - **Type B - Predictive Ordering**: Orders early to prevent stockouts during supplier closures
-- Prevents ordering when you can't receive goods
-- Ensures stock coverage through closure periods
+- **Buffer Before Closure**: Safety margin for pre-holiday delivery delays (default 14 days)
+- **Buffer After Closure**: Factory ramp-up time after reopening (default 14 days)
+- Example: Christmas 20-12 to 05-01 with 14-day buffers → effective closure 06-12 to 19-01
 
 ## Requirements
 

@@ -2,6 +2,21 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.1] - 2025-12-13
+
+### Added
+- **Closure Period Buffers**: Safety margins before and after supplier closures
+  - Buffer Before Closure (default 14 days): Accounts for pre-holiday delivery delays when suppliers rush to clear orders
+  - Buffer After Closure (default 14 days): Factory ramp-up time after reopening before normal production resumes
+  - Example: Christmas closure 20-12 to 05-01 with 14-day buffers → effective closure 06-12 to 19-01
+  - Configurable in ATUM Settings → Enhancer → Closed Periods section
+
+### Improved
+- **Debug Logging**: Enhanced closed periods logging now shows:
+  - Buffer values being applied
+  - All closed periods for each supplier with effective dates (including buffers)
+  - Clear visibility into how closures affect ordering calculations
+
 ## [0.9.0] - 2025-12-13
 
 ### Added
