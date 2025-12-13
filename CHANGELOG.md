@@ -2,6 +2,14 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.8] - 2025-12-13
+
+### Added
+- **Loading Overlay for PO Generation**: Visual feedback during PO generation
+  - WordPress standard spinner with clear message
+  - Displays "Generating PO Suggestions... Please wait, this may take a moment."
+  - Applied to both Settings page and Purchase Orders page buttons
+
 ## [0.9.7] - 2025-12-13
 
 ### Added

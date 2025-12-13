@@ -106,6 +106,15 @@ class POListButton {
 
 		<div id="sae-generate-result" style="position: fixed; bottom: 20px; right: 20px; max-width: 500px; z-index: 9999;"></div>
 
+		<!-- Loading Overlay -->
+		<div id="sae-loading-overlay" style="display: none;">
+			<div class="sae-loading-content">
+				<span class="spinner is-active"></span>
+				<p><?php esc_html_e( 'Generating PO Suggestions...', 'serenisoft-atum-enhancer' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Please wait, this may take a moment.', 'serenisoft-atum-enhancer' ); ?></p>
+			</div>
+		</div>
+
 		<style>
 		/* Custom modal styles */
 		.sae-modal {
@@ -222,6 +231,40 @@ class POListButton {
 			pointer-events: none;
 			opacity: 0.7;
 		}
+
+		/* Loading overlay */
+		#sae-loading-overlay {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(255, 255, 255, 0.9);
+			z-index: 100002;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.sae-loading-content {
+			text-align: center;
+			background: white;
+			padding: 40px 60px;
+			border-radius: 5px;
+			box-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+		}
+		.sae-loading-content .spinner {
+			float: none;
+			margin: 0 auto 20px;
+			display: block;
+		}
+		.sae-loading-content p {
+			margin: 10px 0 0;
+			font-size: 16px;
+		}
+		.sae-loading-content .description {
+			font-size: 13px;
+			color: #666;
+		}
 		</style>
 
 		<script type="text/javascript">
@@ -252,6 +295,7 @@ class POListButton {
 
 				$btn.addClass('loading').text('<?php echo esc_js( __( 'Generating...', 'serenisoft-atum-enhancer' ) ); ?>');
 				$result.html('');
+				$('#sae-loading-overlay').fadeIn(200);
 
 				$.ajax({
 					url: '<?php echo esc_js( $ajax_url ); ?>',
@@ -262,6 +306,7 @@ class POListButton {
 					},
 					success: function(response) {
 						$btn.removeClass('loading').text(originalText);
+						$('#sae-loading-overlay').fadeOut(200);
 
 						if (response.success) {
 							var data = response.data;
@@ -277,6 +322,7 @@ class POListButton {
 					},
 					error: function() {
 						$btn.removeClass('loading').text(originalText);
+						$('#sae-loading-overlay').fadeOut(200);
 						$result.html('<div class="notice notice-error"><p><?php echo esc_js( __( 'An error occurred during generation.', 'serenisoft-atum-enhancer' ) ); ?></p></div>');
 					}
 				});
