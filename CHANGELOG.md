@@ -2,6 +2,32 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.0] - 2025-12-13
+
+### Added
+- **Supplier Closed Periods**: New feature to handle supplier closures (holidays, vacations, factory maintenance)
+  - Global closed period presets in ATUM Settings → Enhancer tab
+  - Supplier-level assignment: select global presets or add custom periods
+  - DD-MM date format (Norwegian format, e.g., "01-07" for July 1st)
+  - Automatic year-crossing support (e.g., "20-12 to 05-01" handles Christmas period)
+  - **Type A - Delivery Date Adjustment**: Automatically extends lead time if delivery would fall during closure
+  - **Type B - Predictive Ordering**: Orders in advance to prevent stockouts during supplier closures
+  - Helper class `ClosedPeriodsHelper` with date logic and closure detection
+  - AJAX-based period management with automatic save on changes
+  - Polling mechanism to detect React-rendered elements in ATUM Settings SPA
+
+### Fixed
+- AJAX 403 error when saving closed periods (nonce read fresh from DOM instead of cached at document.ready)
+- React/SPA compatibility: JavaScript polls for element existence before initialization
+
+### Technical Details
+- Separate WordPress option `sae_global_closed_periods` bypasses ATUM's HTML field save limitation
+- `ClosedPeriodsHelper::get_adjusted_lead_time()` for Type A delivery date adjustments
+- `ClosedPeriodsHelper::check_closure_depletion()` for Type B predictive ordering logic
+- Periods stored per supplier as post meta: `_sae_closed_periods` with presets and custom arrays
+- Date normalization converts DD-MM to timestamps for current and next year
+- jQuery event delegation for dynamic ATUM React rendering
+
 ## [0.8.0] - 2025-12-10
 
 ### Changed

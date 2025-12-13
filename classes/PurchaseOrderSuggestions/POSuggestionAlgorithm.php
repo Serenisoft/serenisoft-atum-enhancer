@@ -64,6 +64,25 @@ class POSuggestionAlgorithm {
 			$lead_time = 14;
 		}
 
+		// CLOSED PERIODS - TYPE A: Adjust lead time if delivery falls in closed period.
+		use SereniSoft\AtumEnhancer\Components\ClosedPeriodsHelper;
+
+		$lead_time_adjustment = ClosedPeriodsHelper::get_adjusted_lead_time( $supplier_id, $lead_time );
+		if ( $lead_time_adjustment['adjusted_lead_time'] > $lead_time ) {
+			$original_lead_time = $lead_time;
+			$lead_time = $lead_time_adjustment['adjusted_lead_time'];
+
+			if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
+				error_log( sprintf(
+					'SAE DEBUG: [Closed Period - Type A] Supplier #%d | Lead time: %d → %d days | Reason: %s',
+					$supplier_id,
+					$original_lead_time,
+					$lead_time,
+					$lead_time_adjustment['reason']
+				) );
+			}
+		}
+
 		foreach ( $product_ids as $product_id ) {
 			$product = wc_get_product( $product_id );
 
@@ -71,7 +90,7 @@ class POSuggestionAlgorithm {
 				continue;
 			}
 
-			$analysis = self::analyze_product( $product, $days_of_stock_target, $lead_time, $service_level, $use_seasonal, $use_predictive );
+			$analysis = self::analyze_product( $product, $days_of_stock_target, $lead_time, $service_level, $use_seasonal, $use_predictive, $supplier_id );
 
 			if ( $analysis['needs_reorder'] ) {
 				$products_to_reorder[] = $analysis;
@@ -96,10 +115,11 @@ class POSuggestionAlgorithm {
 	 * @param int         $service_level        Service level percentage (90, 95, 99).
 	 * @param bool        $use_seasonal         Whether to use seasonal analysis.
 	 * @param bool        $use_predictive       Whether to use predictive ordering logic.
+	 * @param int         $supplier_id          Supplier ID (for closed periods check).
 	 *
 	 * @return array Product analysis data.
 	 */
-	public static function analyze_product( $product, $days_of_stock_target, $lead_time, $service_level, $use_seasonal, $use_predictive = false ) {
+	public static function analyze_product( $product, $days_of_stock_target, $lead_time, $service_level, $use_seasonal, $use_predictive = false, $supplier_id = 0 ) {
 
 		$product_id    = $product->get_id();
 		$current_stock = (int) $product->get_stock_quantity();
@@ -128,12 +148,40 @@ class POSuggestionAlgorithm {
 		// Calculate days of stock remaining (based on effective stock).
 		$days_remaining = $avg_daily_sales > 0 ? floor( $effective_stock / $avg_daily_sales ) : 999;
 
+		// Get SKU for debug logging (needed early for TYPE B logging)
+		$sku = $product->get_sku() ?: 'N/A';
+
+		// CLOSED PERIODS - TYPE B: Check if stock will deplete during closure (PREDICTIVE)
+		$closure_check = ClosedPeriodsHelper::check_closure_depletion(
+			$supplier_id,
+			$effective_stock,
+			$avg_daily_sales,
+			$lead_time
+		);
+
+		$needs_closure_order = false;
+		$closure_extra_days = 0;
+
+		if ( $closure_check && $closure_check['needs_order'] ) {
+			$needs_closure_order = true;
+			$closure_extra_days = $closure_check['extra_days'];
+
+			if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
+				error_log( sprintf(
+					'SAE DEBUG: [Closed Period - Type B] [%s] %s | Stock will deplete during %s (%s to %s) | Extra days: %d',
+					$sku,
+					$product->get_name(),
+					$closure_check['period']['name'],
+					date( 'M j', $closure_check['period']['closure_start'] ),
+					date( 'M j', $closure_check['period']['closure_end'] ),
+					$closure_extra_days
+				) );
+			}
+		}
+
 		// Determine if reorder is needed
 		// Basic reorder check (always applies)
 		$at_or_below_rop = $effective_stock <= $reorder_point;
-
-		// Get SKU for debug logging
-		$sku = $product->get_sku() ?: 'N/A';
 
 		// Debug logging for Pass 1 (basic reorder check with calculations)
 		if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
@@ -194,11 +242,33 @@ class POSuggestionAlgorithm {
 			}
 		}
 
-		// Combined logic
-		$needs_reorder = ( $at_or_below_rop || $within_safety_margin || $will_reach_rop_soon ) && $avg_daily_sales > 0;
+		// Combined logic - include closure check
+		$needs_reorder = ( $at_or_below_rop || $within_safety_margin || $will_reach_rop_soon || $needs_closure_order ) && $avg_daily_sales > 0;
 
 		// Calculate suggested quantity to bring stock up to optimal level.
-		$suggested_qty = $needs_reorder ? max( 1, $optimal_stock - $effective_stock ) : 0;
+		if ( $needs_reorder ) {
+			$base_qty = max( 1, $optimal_stock - $effective_stock );
+
+			// Add extra quantity for closed period buffer
+			if ( $needs_closure_order ) {
+				$closure_buffer = ceil( $avg_daily_sales * $closure_extra_days );
+				$suggested_qty = $base_qty + $closure_buffer;
+
+				if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
+					error_log( sprintf(
+						'SAE DEBUG: [Closed Period - Type B] [%s] Qty: %d base + %d closure buffer = %d total',
+						$sku,
+						$base_qty,
+						$closure_buffer,
+						$suggested_qty
+					) );
+				}
+			} else {
+				$suggested_qty = $base_qty;
+			}
+		} else {
+			$suggested_qty = 0;
+		}
 
 		// Calculate days until ROP for logging (if not already calculated in predictive logic)
 		$days_until_rop = $avg_daily_sales > 0 ? ( $effective_stock - $reorder_point ) / $avg_daily_sales : 999;
@@ -250,9 +320,13 @@ class POSuggestionAlgorithm {
 			'needs_reorder'           => $needs_reorder,
 			'purchase_price'          => self::get_purchase_price( $product ),
 			// Diagnostic fields for predictive ordering
-			'reorder_reason'          => self::get_reorder_reason( $at_or_below_rop, $within_safety_margin, $will_reach_rop_soon ),
+			'reorder_reason'          => self::get_reorder_reason( $at_or_below_rop, $within_safety_margin, $will_reach_rop_soon, $needs_closure_order ),
 			'days_until_rop'          => $avg_daily_sales > 0 ? ( $effective_stock - $reorder_point ) / $avg_daily_sales : 999,
 			'safety_margin_threshold' => $safety_margin_threshold,
+			// Closed periods fields
+			'closure_affected'        => $needs_closure_order,
+			'closure_extra_days'      => $closure_extra_days,
+			'closure_period'          => $closure_check ? $closure_check['period']['name'] : null,
 		);
 
 	}
@@ -482,13 +556,18 @@ class POSuggestionAlgorithm {
 	 * @param bool $at_or_below_rop      At or below reorder point.
 	 * @param bool $within_safety_margin Within safety margin threshold.
 	 * @param bool $will_reach_rop_soon  Will reach ROP within lead time.
+	 * @param bool $needs_closure_order  Stock will deplete during supplier closure.
 	 *
 	 * @return string Reason code.
 	 */
-	private static function get_reorder_reason( $at_or_below_rop, $within_safety_margin, $will_reach_rop_soon ) {
+	private static function get_reorder_reason( $at_or_below_rop, $within_safety_margin, $will_reach_rop_soon, $needs_closure_order = false ) {
 
 		if ( $at_or_below_rop ) {
 			return 'at_rop';
+		}
+
+		if ( $needs_closure_order ) {
+			return 'closure_period';
 		}
 
 		if ( $within_safety_margin ) {

@@ -25,6 +25,16 @@ Extends ATUM Inventory Management for WooCommerce with intelligent purchase orde
 - Norwegian column format support
 - Duplicate detection by code or name
 
+### Supplier Closed Periods
+- **Global Presets**: Define common closure periods (holidays, vacations) in ATUM Settings
+- **Supplier Assignment**: Select global presets or add custom periods per supplier
+- **DD-MM Format**: Norwegian date format (e.g., "01-07" for July 1st)
+- **Year-Crossing Support**: Automatically handles periods like "20-12 to 05-01" (Christmas)
+- **Type A - Delivery Adjustment**: Extends lead time if delivery falls during closure
+- **Type B - Predictive Ordering**: Orders early to prevent stockouts during supplier closures
+- Prevents ordering when you can't receive goods
+- Ensures stock coverage through closure periods
+
 ## Requirements
 
 - WordPress 5.9+

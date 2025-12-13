@@ -46,6 +46,12 @@ class Settings {
 		// Add JavaScript in footer (inline scripts are stripped from HTML fields).
 		add_action( 'admin_print_footer_scripts', array( $this, 'print_footer_scripts' ) );
 
+		// Sanitize custom fields before saving.
+		add_filter( 'atum/settings/sanitize_option', array( $this, 'sanitize_custom_fields' ), 10, 3 );
+
+		// AJAX handler for saving closed periods (bypasses ATUM's HTML field limitation).
+		add_action( 'wp_ajax_sae_save_closed_periods', array( $this, 'ajax_save_closed_periods' ) );
+
 	}
 
 	/**
@@ -65,6 +71,7 @@ class Settings {
 			'sections' => array(
 				'sae_po_suggestions'      => __( 'PO Suggestions', 'serenisoft-atum-enhancer' ),
 				'sae_predictive_ordering' => __( 'Predictive Ordering', 'serenisoft-atum-enhancer' ),
+				'sae_closed_periods'      => __( 'Closed Periods', 'serenisoft-atum-enhancer' ),
 				'sae_supplier_import'     => __( 'Supplier Import', 'serenisoft-atum-enhancer' ),
 			),
 		);
@@ -290,6 +297,16 @@ class Settings {
 			'default' => '',
 		);
 
+		// Closed Periods Presets - HTML UI only, data saved via AJAX to separate option.
+		$defaults['sae_closed_periods_presets'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_closed_periods',
+			'name'    => __( 'Global Closed Period Presets', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Define reusable closed periods that can be applied to multiple suppliers. Dates use DD-MM format (e.g., 01-07 for July 1st) and automatically handle year boundaries (e.g., 20-12 to 05-01 for Christmas spanning years).', 'serenisoft-atum-enhancer' ),
+			'type'    => 'html',
+			'default' => '',
+		);
+
 		return $defaults;
 
 	}
@@ -408,6 +425,62 @@ class Settings {
 	}
 
 	/**
+	 * Get the closed periods management HTML
+	 *
+	 * @since 0.9.0
+	 *
+	 * @return string HTML for closed periods table.
+	 */
+	private function get_closed_periods_html() {
+
+		// Get presets from our own WordPress option (separate from ATUM settings).
+		$presets = get_option( 'sae_global_closed_periods', array() );
+		if ( ! is_array( $presets ) ) {
+			$presets = array();
+		}
+
+		ob_start();
+		?>
+		<div class="sae-closed-periods-manager"
+			data-presets="<?php echo esc_attr( wp_json_encode( $presets ) ); ?>"
+			data-nonce="<?php echo esc_attr( wp_create_nonce( 'sae_closed_periods_nonce' ) ); ?>">
+
+			<p class="description">
+				<?php esc_html_e( 'Examples: Summer vacation (01-07 to 15-08), Christmas (20-12 to 05-01). Year-crossing periods are handled automatically.', 'serenisoft-atum-enhancer' ); ?>
+			</p>
+
+			<table class="sae-periods-table widefat">
+				<thead>
+					<tr>
+						<th style="width: 40%;"><?php esc_html_e( 'Period Name', 'serenisoft-atum-enhancer' ); ?></th>
+						<th style="width: 20%;"><?php esc_html_e( 'Start (DD-MM)', 'serenisoft-atum-enhancer' ); ?></th>
+						<th style="width: 20%;"><?php esc_html_e( 'End (DD-MM)', 'serenisoft-atum-enhancer' ); ?></th>
+						<th style="width: 20%;"><?php esc_html_e( 'Actions', 'serenisoft-atum-enhancer' ); ?></th>
+					</tr>
+				</thead>
+				<tbody id="sae-periods-list"></tbody>
+			</table>
+
+			<button type="button" class="button btn-styled" id="sae-add-period">
+				<?php esc_html_e( '+ Add Period', 'serenisoft-atum-enhancer' ); ?>
+			</button>
+
+			<span class="sae-periods-status" style="margin-left: 10px; color: #666;"></span>
+		</div>
+
+		<style>
+		.sae-periods-table { border-collapse: collapse; margin: 10px 0; }
+		.sae-periods-table th, .sae-periods-table td { padding: 10px; border: 1px solid #ddd; }
+		.sae-periods-table th { background: #f5f5f5; }
+		.sae-periods-table input[type="text"] { width: 95%; padding: 5px; }
+		.sae-remove-period { color: #dc3232; text-decoration: none; cursor: pointer; }
+		</style>
+		<?php
+		return ob_get_clean();
+
+	}
+
+	/**
 	 * Display the generate button for HTML field
 	 *
 	 * @since 1.0.0
@@ -427,7 +500,70 @@ class Settings {
 			return $this->get_import_form_html();
 		}
 
+		if ( 'sae_closed_periods_presets' === $args['id'] ) {
+			return $this->get_closed_periods_html();
+		}
+
 		return $output;
+
+	}
+
+	/**
+	 * Sanitize custom fields before saving
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param mixed  $value      The value to sanitize.
+	 * @param string $option_key The option key.
+	 * @param array  $args       Field arguments.
+	 *
+	 * @return mixed Sanitized value.
+	 */
+	public function sanitize_custom_fields( $value, $option_key, $args ) {
+		// Closed periods are saved via AJAX, not through ATUM settings.
+		return $value;
+	}
+
+	/**
+	 * AJAX handler for saving closed periods presets
+	 *
+	 * Saves to a separate WordPress option, bypassing ATUM's HTML field limitation.
+	 *
+	 * @since 0.9.0
+	 */
+	public function ajax_save_closed_periods() {
+
+		check_ajax_referer( 'sae_closed_periods_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		$presets = isset( $_POST['presets'] ) ? wp_unslash( $_POST['presets'] ) : '[]'; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$decoded = json_decode( $presets, true );
+
+		if ( ! is_array( $decoded ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid data format.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Sanitize each period.
+		$sanitized = array();
+		foreach ( $decoded as $period ) {
+			if ( isset( $period['start_date'], $period['end_date'] )
+				&& preg_match( '/^\d{2}-\d{2}$/', $period['start_date'] )
+				&& preg_match( '/^\d{2}-\d{2}$/', $period['end_date'] ) ) {
+				$sanitized[] = array(
+					'id'         => sanitize_text_field( $period['id'] ?? 'period_' . time() ),
+					'name'       => sanitize_text_field( $period['name'] ?? '' ),
+					'start_date' => sanitize_text_field( $period['start_date'] ),
+					'end_date'   => sanitize_text_field( $period['end_date'] ),
+				);
+			}
+		}
+
+		update_option( 'sae_global_closed_periods', $sanitized );
+
+		wp_send_json_success( array( 'message' => __( 'Closed periods saved.', 'serenisoft-atum-enhancer' ) ) );
 
 	}
 
@@ -755,6 +891,120 @@ class Settings {
 						$result.html('<div class="notice notice-error"><p><?php echo esc_js( __( 'An error occurred during import.', 'serenisoft-atum-enhancer' ) ); ?></p></div>');
 					}
 				});
+			});
+
+			// === Closed Periods Management Scripts ===
+			// Note: ATUM Settings uses React/SPA - elements are rendered dynamically.
+			// We must read data fresh from DOM when needed, not cache at document.ready.
+			var saePeriodsData = [];
+			var saePeriodsDebounce = null;
+
+			// Load initial data (will be empty if element not rendered yet, but
+			// event handlers use delegation so they'll work when element exists)
+			function loadPeriodsData() {
+				var $manager = $('.sae-closed-periods-manager');
+				if ($manager.length && $manager.data('presets')) {
+					var data = $manager.data('presets');
+					if (typeof data === 'string') {
+						try { data = JSON.parse(data); } catch(e) { data = []; }
+					}
+					return Array.isArray(data) ? data : [];
+				}
+				return [];
+			}
+			saePeriodsData = loadPeriodsData();
+
+			// Save periods via AJAX
+			function savePeriodsViaAjax() {
+				var $status = $('.sae-periods-status');
+				$status.text('<?php echo esc_js( __( 'Saving...', 'serenisoft-atum-enhancer' ) ); ?>');
+
+				$.post(ajaxurl, {
+					action: 'sae_save_closed_periods',
+					nonce: $('.sae-closed-periods-manager').data('nonce'),  // Read fresh from DOM
+					presets: JSON.stringify(saePeriodsData)
+				}, function(response) {
+					if (response.success) {
+						$status.text('<?php echo esc_js( __( 'Saved', 'serenisoft-atum-enhancer' ) ); ?>');
+						setTimeout(function() { $status.text(''); }, 2000);
+					} else {
+						$status.text('<?php echo esc_js( __( 'Error saving', 'serenisoft-atum-enhancer' ) ); ?>');
+					}
+				}).fail(function() {
+					$status.text('<?php echo esc_js( __( 'Error saving', 'serenisoft-atum-enhancer' ) ); ?>');
+				});
+			}
+
+			// Debounced save (wait 500ms after last change)
+			function debouncedSave() {
+				clearTimeout(saePeriodsDebounce);
+				saePeriodsDebounce = setTimeout(savePeriodsViaAjax, 500);
+			}
+
+			function renderPeriodRows() {
+				var html = '';
+				$.each(saePeriodsData, function(index, period) {
+					html += '<tr data-index="' + index + '">';
+					html += '<td><input type="text" class="period-name" value="' + (period.name || '') + '" placeholder="<?php echo esc_js( __( 'e.g., Summer Vacation', 'serenisoft-atum-enhancer' ) ); ?>"></td>';
+					html += '<td><input type="text" class="period-start" value="' + (period.start_date || '') + '" placeholder="01-07" pattern="\\d{2}-\\d{2}"></td>';
+					html += '<td><input type="text" class="period-end" value="' + (period.end_date || '') + '" placeholder="15-08" pattern="\\d{2}-\\d{2}"></td>';
+					html += '<td><a href="#" class="sae-remove-period"><?php echo esc_js( __( 'Remove', 'serenisoft-atum-enhancer' ) ); ?></a></td>';
+					html += '</tr>';
+				});
+
+				if (!html) {
+					html = '<tr><td colspan="4" style="text-align: center; color: #999;"><?php echo esc_js( __( 'No periods defined. Click "+ Add Period" to create one.', 'serenisoft-atum-enhancer' ) ); ?></td></tr>';
+				}
+
+				$('#sae-periods-list').html(html);
+			}
+
+			// Initial render - poll for element since ATUM uses React/SPA
+			var saeInitInterval = setInterval(function() {
+				if ($('#sae-periods-list').length) {
+					clearInterval(saeInitInterval);
+					saePeriodsData = loadPeriodsData();
+					renderPeriodRows();
+				}
+			}, 200);
+
+			// Add period button
+			$(document).on('click', '#sae-add-period', function(e) {
+				e.preventDefault();
+				// Load data fresh on first interaction (in case doc ready ran before React rendered)
+				if (!saePeriodsData.length) {
+					saePeriodsData = loadPeriodsData();
+				}
+				saePeriodsData.push({
+					id: 'period_' + Date.now(),
+					name: '',
+					start_date: '',
+					end_date: ''
+				});
+				renderPeriodRows();
+				debouncedSave();
+			});
+
+			// Remove period button
+			$(document).on('click', '.sae-remove-period', function(e) {
+				e.preventDefault();
+				var index = $(this).closest('tr').data('index');
+				saePeriodsData.splice(index, 1);
+				renderPeriodRows();
+				debouncedSave();
+			});
+
+			// Update on input change
+			$(document).on('input', '.sae-periods-table input', function() {
+				var row = $(this).closest('tr');
+				var index = row.data('index');
+
+				if (typeof saePeriodsData[index] !== 'undefined') {
+					saePeriodsData[index].name = row.find('.period-name').val();
+					saePeriodsData[index].start_date = row.find('.period-start').val();
+					saePeriodsData[index].end_date = row.find('.period-end').val();
+					debouncedSave();
+				}
 			});
 
 			// === Generate PO Suggestions Scripts ===
