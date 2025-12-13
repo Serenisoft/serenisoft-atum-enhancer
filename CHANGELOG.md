@@ -2,6 +2,11 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.12] - 2025-12-13
+
+### Fixed
+- **Hide Backordered on PDF**: Fixed settings key retrieval (was using wrong key name)
+
 ## [0.9.11] - 2025-12-13
 
 ### Added

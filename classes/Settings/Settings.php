@@ -631,8 +631,10 @@ class Settings {
 	 */
 	public function filter_po_pdf_hidden_meta( $hidden_meta ) {
 
-		if ( 'yes' === self::get( 'hide_backordered_on_pdf', 'no' ) ) {
+		if ( 'yes' === self::get( 'sae_hide_backordered_on_pdf', 'no' ) ) {
 			$hidden_meta[] = 'backordered';
+			$hidden_meta[] = 'Backordered';
+			$hidden_meta[] = '_backordered';
 		}
 
 		return $hidden_meta;
