@@ -21,6 +21,7 @@ use SereniSoft\AtumEnhancer\Products\ProductFields;
 use SereniSoft\AtumEnhancer\PurchaseOrderSuggestions\POSuggestionGenerator;
 use SereniSoft\AtumEnhancer\BulkActions\BulkSupplierAssignment;
 use SereniSoft\AtumEnhancer\StockCentral\StockCentralColumns;
+use SereniSoft\AtumEnhancer\StockCentral\SalesDataColumns;
 
 class Bootstrap {
 
@@ -107,6 +108,9 @@ class Bootstrap {
 
 		// Initialize Stock Central Columns (MOQ).
 		StockCentralColumns::get_instance();
+
+		// Initialize Stock Central Sales Data Columns.
+		SalesDataColumns::get_instance();
 
 	}
 

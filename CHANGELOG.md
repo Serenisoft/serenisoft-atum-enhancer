@@ -2,6 +2,30 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.6] - 2025-12-13
+
+### Fixed
+- **Sales Data Columns**: "Sold (Period)" now shows average per period (Year ÷ orders_per_year) instead of actual sales in last N days
+  - Uses supplier-specific `orders_per_year` when configured, otherwise falls back to global default
+  - Example: Product with 119 yearly sales and 4 orders/year now shows 30 (119÷4) instead of 8
+
+## [0.9.5] - 2025-12-13
+
+### Added
+- **Sales Data Columns in Stock Central**: Two new columns showing historical sales data
+  - "Sold (Year)" - Total quantity sold in the last 365 days
+  - "Sold (Period)" - Total quantity sold in the last ordering period (365 / orders_per_year days)
+  - "Fetch Sales Data" button in Stock Central header to load data on demand
+  - Uses WooCommerce's `wc_order_product_lookup` table for efficient sales queries
+  - HPOS (High-Performance Order Storage) compatible
+  - Only fetches data when button is clicked to avoid performance impact on page load
+
+### Technical Details
+- New class `SalesDataColumns` for Stock Central sales columns
+- Hooks: `atum/stock_central_list/page_title_buttons`, `atum/stock_central_list/table_columns`
+- AJAX endpoint: `sae_fetch_sales_data` with nonce verification
+- Columns placed in "Stock" group after stock column
+
 ## [0.9.4] - 2025-12-13
 
 ### Fixed
