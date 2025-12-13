@@ -20,6 +20,7 @@ use SereniSoft\AtumEnhancer\Suppliers\SupplierFields;
 use SereniSoft\AtumEnhancer\Products\ProductFields;
 use SereniSoft\AtumEnhancer\PurchaseOrderSuggestions\POSuggestionGenerator;
 use SereniSoft\AtumEnhancer\BulkActions\BulkSupplierAssignment;
+use SereniSoft\AtumEnhancer\StockCentral\StockCentralColumns;
 
 class Bootstrap {
 
@@ -103,6 +104,9 @@ class Bootstrap {
 
 		// Initialize Bulk Supplier Assignment.
 		BulkSupplierAssignment::get_instance();
+
+		// Initialize Stock Central Columns (MOQ).
+		StockCentralColumns::get_instance();
 
 	}
 

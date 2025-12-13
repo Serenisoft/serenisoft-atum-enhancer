@@ -28,6 +28,11 @@ class ProductFields {
 	const META_PO_NOTE = '_sae_po_note';
 
 	/**
+	 * Meta key for Minimum Order Quantity
+	 */
+	const META_MOQ = '_sae_moq';
+
+	/**
 	 * ProductFields constructor
 	 *
 	 * @since 1.0.0
@@ -62,9 +67,27 @@ class ProductFields {
 		}
 
 		$po_note = get_post_meta( $post->ID, self::META_PO_NOTE, true );
+		$moq     = self::get_moq( $post->ID );
 
 		?>
 		<div class="options_group">
+			<?php
+			woocommerce_wp_text_input(
+				array(
+					'id'                => self::META_MOQ,
+					'label'             => __( 'Minimum Order Qty', 'serenisoft-atum-enhancer' ),
+					'desc_tip'          => true,
+					'description'       => __( 'Minimum quantity that must be ordered from supplier. PO suggestions will round up to this value.', 'serenisoft-atum-enhancer' ),
+					'type'              => 'number',
+					'custom_attributes' => array(
+						'min'  => '1',
+						'step' => '1',
+					),
+					'value'             => $moq > 1 ? $moq : '',
+					'placeholder'       => '1',
+				)
+			);
+			?>
 			<p class="form-field _sae_po_note_field">
 				<label for="_sae_po_note"><?php esc_html_e( 'PO Note', 'serenisoft-atum-enhancer' ); ?></label>
 				<textarea
@@ -94,9 +117,24 @@ class ProductFields {
 	public function render_variation_fields( $loop, $variation_data, $variation ) {
 
 		$po_note = get_post_meta( $variation->ID, self::META_PO_NOTE, true );
+		$moq     = self::get_moq( $variation->ID );
 
 		?>
-		<div class="form-row form-row-full sae-variation-po-note">
+		<div class="form-row form-row-first sae-variation-moq">
+			<label for="_sae_moq_<?php echo esc_attr( $loop ); ?>">
+				<?php esc_html_e( 'Minimum Order Qty', 'serenisoft-atum-enhancer' ); ?>
+				<?php echo wc_help_tip( __( 'Minimum quantity that must be ordered from supplier.', 'serenisoft-atum-enhancer' ) ); ?>
+			</label>
+			<input
+				type="number"
+				id="_sae_moq_<?php echo esc_attr( $loop ); ?>"
+				name="_sae_variation_moq[<?php echo esc_attr( $loop ); ?>]"
+				value="<?php echo $moq > 1 ? esc_attr( $moq ) : ''; ?>"
+				min="1"
+				step="1"
+				placeholder="1">
+		</div>
+		<div class="form-row form-row-last sae-variation-po-note">
 			<label for="_sae_po_note_<?php echo esc_attr( $loop ); ?>">
 				<?php esc_html_e( 'PO Note', 'serenisoft-atum-enhancer' ); ?>
 				<?php echo wc_help_tip( __( 'Note to include on Purchase Order line for this variation.', 'serenisoft-atum-enhancer' ) ); ?>
@@ -121,6 +159,18 @@ class ProductFields {
 	 */
 	public function save_product_fields( $product_id ) {
 
+		// Save MOQ.
+		if ( isset( $_POST[ self::META_MOQ ] ) ) {
+			$moq = absint( wp_unslash( $_POST[ self::META_MOQ ] ) );
+
+			if ( $moq > 1 ) {
+				update_post_meta( $product_id, self::META_MOQ, $moq );
+			} else {
+				delete_post_meta( $product_id, self::META_MOQ );
+			}
+		}
+
+		// Save PO note.
 		if ( isset( $_POST['_sae_po_note'] ) ) {
 			$value = sanitize_textarea_field( wp_unslash( $_POST['_sae_po_note'] ) );
 			$value = mb_substr( $value, 0, 1000 );
@@ -144,6 +194,18 @@ class ProductFields {
 	 */
 	public function save_variation_fields( $variation_id, $loop ) {
 
+		// Save MOQ.
+		if ( isset( $_POST['_sae_variation_moq'][ $loop ] ) ) {
+			$moq = absint( wp_unslash( $_POST['_sae_variation_moq'][ $loop ] ) );
+
+			if ( $moq > 1 ) {
+				update_post_meta( $variation_id, self::META_MOQ, $moq );
+			} else {
+				delete_post_meta( $variation_id, self::META_MOQ );
+			}
+		}
+
+		// Save PO note.
 		if ( isset( $_POST['_sae_variation_po_note'][ $loop ] ) ) {
 			$value = sanitize_textarea_field( wp_unslash( $_POST['_sae_variation_po_note'][ $loop ] ) );
 			$value = mb_substr( $value, 0, 1000 );
@@ -171,6 +233,23 @@ class ProductFields {
 		$value = get_post_meta( $product_id, self::META_PO_NOTE, true );
 
 		return ! empty( $value ) ? $value : '';
+
+	}
+
+	/**
+	 * Get MOQ (Minimum Order Quantity) for a product
+	 *
+	 * @since 0.9.3
+	 *
+	 * @param int $product_id Product ID.
+	 *
+	 * @return int MOQ value or 1 if not set.
+	 */
+	public static function get_moq( $product_id ) {
+
+		$value = get_post_meta( $product_id, self::META_MOQ, true );
+
+		return ! empty( $value ) ? absint( $value ) : 1;
 
 	}
 

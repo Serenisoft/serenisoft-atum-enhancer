@@ -18,6 +18,7 @@ defined( 'ABSPATH' ) || die;
 
 use SereniSoft\AtumEnhancer\Settings\Settings;
 use SereniSoft\AtumEnhancer\Suppliers\SupplierFields;
+use SereniSoft\AtumEnhancer\Products\ProductFields;
 use SereniSoft\AtumEnhancer\Components\ClosedPeriodsHelper;
 use Atum\Suppliers\Supplier;
 use Atum\Suppliers\Suppliers;
@@ -310,6 +311,21 @@ class POSuggestionAlgorithm {
 			$suggested_qty = 0;
 		}
 
+		// Apply MOQ (Minimum Order Quantity) - round up to MOQ if needed.
+		$moq = ProductFields::get_moq( $product_id );
+		if ( $moq > 1 && $suggested_qty > 0 && $suggested_qty < $moq ) {
+			if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
+				error_log( sprintf(
+					'SAE DEBUG: [MOQ] [%s] Qty adjusted: %d → %d (MOQ: %d)',
+					$sku,
+					$suggested_qty,
+					$moq,
+					$moq
+				) );
+			}
+			$suggested_qty = $moq;
+		}
+
 		// Calculate days until ROP for logging (if not already calculated in predictive logic)
 		$days_until_rop = $avg_daily_sales > 0 ? ( $effective_stock - $reorder_point ) / $avg_daily_sales : 999;
 
@@ -367,6 +383,8 @@ class POSuggestionAlgorithm {
 			'closure_affected'        => $needs_closure_order,
 			'closure_extra_days'      => $closure_extra_days,
 			'closure_period'          => $closure_check ? $closure_check['period']['name'] : null,
+			// MOQ field
+			'moq'                     => $moq,
 		);
 
 	}

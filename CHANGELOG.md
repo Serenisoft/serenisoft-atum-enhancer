@@ -2,6 +2,23 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.3] - 2025-12-13
+
+### Added
+- **Minimum Order Quantity (MOQ)**: New field to specify minimum order quantity per product
+  - Field in product admin page (ATUM panel) for simple and variable products
+  - Variation-level MOQ support for variable products
+  - MOQ column in Stock Central with direct inline editing (not popover)
+  - PO algorithm rounds up suggested quantity to MOQ when calculated qty is lower
+  - Debug logging shows MOQ adjustments during PO generation
+  - Meta key: `_sae_moq`, default value: 1
+
+### Technical Details
+- New class `StockCentralColumns` for Stock Central MOQ column
+- Hooks: `atum/stock_central_list/column_group_members`, `atum/stock_central_list/table_columns`
+- Uses `atum/product_data` filter to save MOQ via ATUM's standard save mechanism
+- Direct input field in Stock Central allows fast bulk editing by clicking and typing
+
 ## [0.9.2] - 2025-12-13
 
 ### Fixed
