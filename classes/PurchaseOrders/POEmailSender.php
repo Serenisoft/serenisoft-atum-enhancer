@@ -62,6 +62,12 @@ class POEmailSender {
 			return $actions;
 		}
 
+		// Only show on edit page, not on list page.
+		$screen = get_current_screen();
+		if ( $screen && 'edit' === $screen->base ) {
+			return $actions; // We're on the list page, don't add button.
+		}
+
 		// Check if supplier has email.
 		$supplier_id = $purchase_order->get_supplier( 'id' );
 		if ( ! $supplier_id ) {
