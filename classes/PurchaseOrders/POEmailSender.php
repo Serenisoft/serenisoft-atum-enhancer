@@ -63,7 +63,7 @@ class POEmailSender {
 		}
 
 		// Check if supplier has email.
-		$supplier_id = $purchase_order->get_supplier_id();
+		$supplier_id = $purchase_order->get_supplier( 'id' );
 		if ( ! $supplier_id ) {
 			return $actions;
 		}
@@ -303,7 +303,7 @@ class POEmailSender {
 
 		// Get PO and supplier info.
 		$po          = new \Atum\PurchaseOrders\Models\PurchaseOrder( $po_id );
-		$supplier_id = $po->get_supplier_id();
+		$supplier_id = $po->get_supplier( 'id' );
 
 		if ( ! $supplier_id ) {
 			wp_send_json_error( array( 'message' => __( 'No supplier assigned to this Purchase Order.', 'serenisoft-atum-enhancer' ) ) );
