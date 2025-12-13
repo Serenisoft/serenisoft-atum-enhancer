@@ -23,6 +23,7 @@ use SereniSoft\AtumEnhancer\BulkActions\BulkSupplierAssignment;
 use SereniSoft\AtumEnhancer\StockCentral\StockCentralColumns;
 use SereniSoft\AtumEnhancer\StockCentral\SalesDataColumns;
 use SereniSoft\AtumEnhancer\PurchaseOrders\POListButton;
+use SereniSoft\AtumEnhancer\PurchaseOrders\POEmailSender;
 
 class Bootstrap {
 
@@ -115,6 +116,9 @@ class Bootstrap {
 
 		// Initialize PO List Button.
 		POListButton::get_instance();
+
+		// Initialize PO Email Sender.
+		POEmailSender::get_instance();
 
 	}
 

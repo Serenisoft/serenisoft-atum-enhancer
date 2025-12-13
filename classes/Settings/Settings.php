@@ -76,6 +76,7 @@ class Settings {
 				'sae_predictive_ordering' => __( 'Predictive Ordering', 'serenisoft-atum-enhancer' ),
 				'sae_closed_periods'      => __( 'Closed Periods', 'serenisoft-atum-enhancer' ),
 				'sae_po_pdf'              => __( 'PO PDF', 'serenisoft-atum-enhancer' ),
+				'sae_po_email'            => __( 'PO Email', 'serenisoft-atum-enhancer' ),
 				'sae_supplier_import'     => __( 'Supplier Import', 'serenisoft-atum-enhancer' ),
 			),
 		);
@@ -349,6 +350,52 @@ class Settings {
 			'desc'    => __( 'Hide the "Backordered" field from Purchase Order PDF exports.', 'serenisoft-atum-enhancer' ),
 			'type'    => 'switcher',
 			'default' => 'no',
+		);
+
+		// PO Email Settings.
+		$defaults['sae_email_from_name'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_po_email',
+			'name'    => __( 'From Name', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'The sender name that appears in the email. Leave empty to use site name.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'text',
+			'default' => '',
+		);
+
+		$defaults['sae_email_from_address'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_po_email',
+			'name'    => __( 'From Email Address', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'The sender email address. This will also be used as Reply-To. Leave empty to use admin email.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'text',
+			'default' => '',
+		);
+
+		$defaults['sae_email_cc_address'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_po_email',
+			'name'    => __( 'CC Email Address', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Admin email address to receive a copy of all PO emails sent to suppliers.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'text',
+			'default' => '',
+		);
+
+		$defaults['sae_email_body_template'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_po_email',
+			'name'    => __( 'Email Body Template', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Default email message. Available placeholders: {po_number}, {supplier_name}, {order_date}, {total}', 'serenisoft-atum-enhancer' ),
+			'type'    => 'textarea',
+			'default' => "Dear {supplier_name},\n\nPlease find attached Purchase Order #{po_number}.\n\nPlease confirm receipt and expected delivery date.\n\nBest regards,",
+		);
+
+		$defaults['sae_email_signature'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_po_email',
+			'name'    => __( 'Email Signature', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Signature to appear at the bottom of the email.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'textarea',
+			'default' => '',
 		);
 
 		return $defaults;

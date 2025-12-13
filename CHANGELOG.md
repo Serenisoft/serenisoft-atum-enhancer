@@ -2,6 +2,29 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.14] - 2025-12-13
+
+### Added
+- **Send PO to Supplier via Email**: New feature to send Purchase Orders directly to suppliers
+  - "Send to Supplier" button on PO edit page (appears next to PDF generation)
+  - Sends PO as PDF attachment using ATUM's POExport
+  - New settings section "PO Email" with configuration options:
+    - From Name and Email Address (custom sender/reply-to)
+    - CC Email Address (admin always receives copy)
+    - Email Body Template with placeholders ({po_number}, {supplier_name}, {order_date}, {total})
+    - Email Signature
+  - Subject format: "Purchase Order #123 - Supplier Name"
+  - Uses supplier's ordering_email (falls back to general_email)
+  - Email send log stored in PO meta for audit trail
+  - Confirmation dialog before sending
+
+### Technical Details
+- New class `POEmailSender` in `classes/PurchaseOrders/`
+- Hooks: `atum/atum_purchase_order/admin_order_actions` for action button
+- AJAX endpoint: `sae_send_po_email` with nonce verification
+- PDF generated via ATUM's POExport with Destination::STRING_RETURN
+- Temp PDF saved to `wp-content/uploads/sae-temp/`, deleted after sending
+
 ## [0.9.13] - 2025-12-13
 
 ### Fixed
