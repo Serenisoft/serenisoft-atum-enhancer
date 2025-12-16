@@ -1317,6 +1317,8 @@ class Settings {
 			$column_name = preg_replace( '/^\xEF\xBB\xBF/', '', $column_name );
 			$column_name = str_replace( "\xEF\xBB\xBF", '', $column_name );
 			$column_name = trim( $column_name );
+			// Strip quotes that fgetcsv may have left due to BOM interference.
+			$column_name = trim( $column_name, '"' );
 
 			if ( isset( $column_mapping[ $column_name ] ) ) {
 				$indices[ $column_mapping[ $column_name ] ] = $index;
