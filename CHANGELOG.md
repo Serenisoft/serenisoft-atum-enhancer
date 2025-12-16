@@ -2,6 +2,29 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.16] - 2025-12-16
+
+### Added
+- **PO Suggestion Email Configuration**: New email settings for PO suggestion notifications
+  - Notification Email (To): Configure recipient address
+  - Notification Email (CC): Add CC recipient
+  - From Name: Custom sender name
+  - From Email: Custom sender email address
+  - All fields have sensible defaults (WordPress admin email, site name)
+
+## [0.9.15] - 2025-12-16
+
+### Added
+- **Product-Supplier Mapping Export/Import**: New functionality in Import & Export section
+  - Export product SKU to supplier code mappings as CSV
+  - Import mappings with preview before applying changes
+  - Supports both updating existing and clearing old supplier assignments
+
+### Fixed
+- **CSV Import BOM Handling**: Fixed issue where CSV files with BOM (Byte Order Mark) failed to import
+  - fgetcsv didn't recognize quoted fields when BOM preceded the opening quote
+  - Added quote stripping after BOM removal to handle malformed field values
+
 ## [0.9.14] - 2025-12-13
 
 ### Added

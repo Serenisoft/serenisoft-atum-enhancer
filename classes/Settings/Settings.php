@@ -202,6 +202,51 @@ class Settings {
 			),
 		);
 
+		$defaults['sae_notification_email'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_po_suggestions',
+			'name'    => __( 'Notification Email (To)', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Email address to receive notifications when PO suggestions are generated. Leave empty to use WordPress admin email.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'text',
+			'default' => '',
+			'options' => array(
+				'placeholder' => get_option( 'admin_email' ),
+			),
+		);
+
+		$defaults['sae_notification_cc'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_po_suggestions',
+			'name'    => __( 'Notification Email (CC)', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Optional CC address for PO suggestion notifications. Leave empty for no CC.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'text',
+			'default' => '',
+		);
+
+		$defaults['sae_notification_from_name'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_po_suggestions',
+			'name'    => __( 'From Name', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Name shown as the sender of notification emails. Leave empty to use site name.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'text',
+			'default' => '',
+			'options' => array(
+				'placeholder' => get_bloginfo( 'name' ),
+			),
+		);
+
+		$defaults['sae_notification_from_email'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_po_suggestions',
+			'name'    => __( 'From Email', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Email address shown as sender. Leave empty to use WordPress default.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'text',
+			'default' => '',
+			'options' => array(
+				'placeholder' => 'wordpress@' . wp_parse_url( home_url(), PHP_URL_HOST ),
+			),
+		);
+
 		$defaults['sae_generate_suggestions'] = array(
 			'group'    => self::TAB_KEY,
 			'section'  => 'sae_po_suggestions',

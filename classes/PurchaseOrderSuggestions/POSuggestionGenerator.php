@@ -649,10 +649,34 @@ class POSuggestionGenerator {
 	 */
 	private function send_notification_email( $created_pos ) {
 
-		$admin_email = Settings::get( 'sae_admin_email', get_option( 'admin_email' ) );
+		$to_email = Settings::get( 'sae_notification_email', get_option( 'admin_email' ) );
 
-		if ( empty( $admin_email ) ) {
+		if ( empty( $to_email ) ) {
 			return;
+		}
+
+		// Build headers.
+		$headers = array();
+
+		// From name and email.
+		$from_name  = Settings::get( 'sae_notification_from_name', '' );
+		$from_email = Settings::get( 'sae_notification_from_email', '' );
+
+		if ( empty( $from_name ) ) {
+			$from_name = get_bloginfo( 'name' );
+		}
+
+		if ( ! empty( $from_email ) ) {
+			$headers[] = 'From: ' . $from_name . ' <' . $from_email . '>';
+		} elseif ( ! empty( $from_name ) ) {
+			// Only set From name, let WordPress handle the email.
+			$headers[] = 'From: ' . $from_name;
+		}
+
+		// CC.
+		$cc_email = Settings::get( 'sae_notification_cc', '' );
+		if ( ! empty( $cc_email ) ) {
+			$headers[] = 'Cc: ' . $cc_email;
 		}
 
 		$subject = sprintf(
@@ -677,7 +701,7 @@ class POSuggestionGenerator {
 
 		$message .= __( 'Please review these suggestions and update the quantities as needed.', 'serenisoft-atum-enhancer' );
 
-		wp_mail( $admin_email, $subject, $message );
+		wp_mail( $to_email, $subject, $message, $headers );
 
 	}
 
