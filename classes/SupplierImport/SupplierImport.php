@@ -32,29 +32,66 @@ class SupplierImport {
 
 	/**
 	 * Column mapping from CSV to ATUM supplier fields
+	 * Supports both Norwegian (legacy) and English (export format) column names
 	 *
 	 * @var array
 	 */
 	private $column_mapping = array(
+		// Code.
 		'Leverandørnummer'       => 'code',
+		'Code'                   => 'code',
+		// Name.
 		'Navn'                   => 'name',
+		'Name'                   => 'name',
+		// Tax Number.
 		'Organisasjonsnummer'    => 'tax_number',
+		'Tax Number'             => 'tax_number',
+		// Phone.
 		'Telefonnummer'          => 'phone',
+		'Phone'                  => 'phone',
+		// Fax.
 		'Faksnummer'             => 'fax',
+		'Fax'                    => 'fax',
+		// General Email.
 		'E-postadresse'          => 'general_email',
-		'Postadresse Postnr.'    => 'zip_code',
+		'General Email'          => 'general_email',
+		// Ordering Email.
+		'Ordering Email'         => 'ordering_email',
+		// Website.
+		'Website'                => 'website',
+		// Ordering URL.
+		'Ordering URL'           => 'ordering_url',
+		// Address.
+		'Address'                => 'address',
+		'Postadresse'            => 'address',
+		// Address 2.
+		'Address 2'              => 'address_2',
+		// City.
 		'Postadresse Sted'       => 'city',
+		'City'                   => 'city',
+		// State.
+		'State'                  => 'state',
+		// Zip Code.
+		'Postadresse Postnr.'    => 'zip_code',
+		'Zip Code'               => 'zip_code',
+		// Country.
 		'Postadresse Land'       => 'country',
-	);
-
-	/**
-	 * Address line columns (handled separately due to duplicate names)
-	 *
-	 * @var array
-	 */
-	private $address_columns = array(
-		8  => 'address',   // First "Postadresse Linje"
-		9  => 'address_2', // Second "Postadresse Linje"
+		'Country'                => 'country',
+		// Currency.
+		'Currency'               => 'currency',
+		// Lead Time.
+		'Lead Time (days)'       => 'lead_time',
+		'Lead Time'              => 'lead_time',
+		// Discount.
+		'Discount (%)'           => 'discount',
+		'Discount'               => 'discount',
+		// Tax Rate.
+		'Tax Rate (%)'           => 'tax_rate',
+		'Tax Rate'               => 'tax_rate',
+		// Location.
+		'Location'               => 'location',
+		// Description.
+		'Description'            => 'description',
 	);
 
 	/**
@@ -351,16 +388,9 @@ class SupplierImport {
 		foreach ( $header as $index => $column_name ) {
 			$column_name = trim( $column_name );
 
-			// Check standard mapping.
+			// Check standard mapping (supports both Norwegian and English column names).
 			if ( isset( $this->column_mapping[ $column_name ] ) ) {
 				$indices[ $this->column_mapping[ $column_name ] ] = $index;
-			}
-		}
-
-		// Add address columns by position.
-		foreach ( $this->address_columns as $position => $field ) {
-			if ( isset( $header[ $position ] ) ) {
-				$indices[ $field ] = $position;
 			}
 		}
 
@@ -406,16 +436,25 @@ class SupplierImport {
 
 		// Set all other fields.
 		$field_setters = array(
-			'code'          => 'set_code',
-			'tax_number'    => 'set_tax_number',
-			'phone'         => 'set_phone',
-			'fax'           => 'set_fax',
-			'general_email' => 'set_general_email',
-			'zip_code'      => 'set_zip_code',
-			'city'          => 'set_city',
-			'country'       => 'set_country',
-			'address'       => 'set_address',
-			'address_2'     => 'set_address_2',
+			'code'           => 'set_code',
+			'tax_number'     => 'set_tax_number',
+			'phone'          => 'set_phone',
+			'fax'            => 'set_fax',
+			'general_email'  => 'set_general_email',
+			'ordering_email' => 'set_ordering_email',
+			'website'        => 'set_website',
+			'ordering_url'   => 'set_ordering_url',
+			'address'        => 'set_address',
+			'address_2'      => 'set_address_2',
+			'city'           => 'set_city',
+			'state'          => 'set_state',
+			'zip_code'       => 'set_zip_code',
+			'country'        => 'set_country',
+			'currency'       => 'set_currency',
+			'lead_time'      => 'set_lead_time',
+			'discount'       => 'set_discount',
+			'tax_rate'       => 'set_tax_rate',
+			'location'       => 'set_location',
 		);
 
 		foreach ( $field_setters as $field => $setter ) {

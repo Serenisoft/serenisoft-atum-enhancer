@@ -362,15 +362,22 @@ class POEmailSender {
 	 */
 	private function send_po_email( $po_id, $supplier ) {
 
-		$supplier_email = $supplier->ordering_email ?: $supplier->general_email;
+		try {
+			error_log( 'SAE Email: Starting send_po_email for PO #' . $po_id );
+
+			$supplier_email = $supplier->ordering_email ?: $supplier->general_email;
 		$supplier_name  = $supplier->name;
 
+		error_log( 'SAE Email: Supplier: ' . $supplier_name . ' <' . $supplier_email . '>' );
+
 		// Get email settings.
+		error_log( 'SAE Email: Getting email settings...' );
 		$from_name    = Settings::get( 'sae_email_from_name', '' ) ?: get_bloginfo( 'name' );
 		$from_email   = Settings::get( 'sae_email_from_address', '' ) ?: get_option( 'admin_email' );
 		$cc_email     = Settings::get( 'sae_email_cc_address', '' );
 		$body_template = Settings::get( 'sae_email_body_template', '' );
 		$signature    = Settings::get( 'sae_email_signature', '' );
+		error_log( 'SAE Email: Settings loaded. From: ' . $from_name . ' <' . $from_email . '>' );
 
 		// Default body if not set.
 		if ( empty( $body_template ) ) {
@@ -378,9 +385,13 @@ class POEmailSender {
 		}
 
 		// Get PO data for placeholders.
+		error_log( 'SAE Email: Getting PO data for placeholders...' );
 		$po         = new \Atum\PurchaseOrders\Models\PurchaseOrder( $po_id );
-		$order_date = $po->get_date_created() ? $po->get_date_created()->format( get_option( 'date_format' ) ) : '';
-		$total      = $po->get_formatted_total();
+		error_log( 'SAE Email: PO model created' );
+		$order_date = $po->date_created ? ( new \DateTime( $po->date_created ) )->format( get_option( 'date_format' ) ) : '';
+		error_log( 'SAE Email: Order date: ' . $order_date );
+		$total      = wc_price( $po->total );
+		error_log( 'SAE Email: Total: ' . $total );
 
 		// Replace placeholders.
 		$placeholders = array(
@@ -417,14 +428,23 @@ class POEmailSender {
 		}
 
 		// Generate PDF.
+		error_log( 'SAE Email: Generating PDF...' );
 		$pdf_path = $this->generate_pdf( $po_id );
 
 		if ( is_wp_error( $pdf_path ) ) {
+			error_log( 'SAE Email: PDF generation failed: ' . $pdf_path->get_error_message() );
 			return $pdf_path;
 		}
 
+		error_log( 'SAE Email: PDF generated at: ' . $pdf_path );
+		error_log( 'SAE Email: PDF file exists: ' . ( file_exists( $pdf_path ) ? 'yes' : 'no' ) );
+		error_log( 'SAE Email: Sending to: ' . $supplier_email );
+		error_log( 'SAE Email: Subject: ' . $subject );
+
 		// Send email.
 		$sent = wp_mail( $supplier_email, $subject, $body, $headers, array( $pdf_path ) );
+
+		error_log( 'SAE Email: wp_mail returned: ' . ( $sent ? 'true' : 'false' ) );
 
 		// Delete temp PDF.
 		if ( file_exists( $pdf_path ) ) {
@@ -432,6 +452,7 @@ class POEmailSender {
 		}
 
 		if ( ! $sent ) {
+			error_log( 'SAE Email: Failed to send email' );
 			return new \WP_Error( 'email_failed', __( 'Failed to send email. Please check your server email configuration.', 'serenisoft-atum-enhancer' ) );
 		}
 
@@ -439,6 +460,16 @@ class POEmailSender {
 		$this->log_email_sent( $po_id, $supplier_email, $cc_email );
 
 		return true;
+
+		} catch ( \Exception $e ) {
+			error_log( 'SAE Email: Exception in send_po_email: ' . $e->getMessage() );
+			error_log( 'SAE Email: Exception trace: ' . $e->getTraceAsString() );
+			return new \WP_Error( 'email_exception', $e->getMessage() );
+		} catch ( \Error $e ) {
+			error_log( 'SAE Email: Fatal error in send_po_email: ' . $e->getMessage() );
+			error_log( 'SAE Email: Error trace: ' . $e->getTraceAsString() );
+			return new \WP_Error( 'email_error', $e->getMessage() );
+		}
 
 	}
 
@@ -454,36 +485,49 @@ class POEmailSender {
 	private function generate_pdf( $po_id ) {
 
 		try {
+			error_log( 'SAE Email: Creating POExport for PO #' . $po_id );
 			$po_export = new POExport( $po_id );
 
 			// Get temp directory.
 			$upload_dir = wp_upload_dir();
 			$temp_dir   = $upload_dir['basedir'] . '/sae-temp';
 
+			error_log( 'SAE Email: Temp dir: ' . $temp_dir );
+
 			if ( ! is_dir( $temp_dir ) ) {
 				wp_mkdir_p( $temp_dir );
+				error_log( 'SAE Email: Created temp dir' );
 			}
 
 			$pdf_filename = 'po-' . $po_id . '-' . time() . '.pdf';
 			$pdf_path     = $temp_dir . '/' . $pdf_filename;
 
+			error_log( 'SAE Email: PDF path will be: ' . $pdf_path );
+
 			// Generate PDF as string and save to file.
+			error_log( 'SAE Email: Calling POExport->generate()...' );
 			$pdf_content = $po_export->generate( Destination::STRING_RETURN );
 
 			if ( is_wp_error( $pdf_content ) ) {
+				error_log( 'SAE Email: POExport returned WP_Error: ' . $pdf_content->get_error_message() );
 				return $pdf_content;
 			}
+
+			error_log( 'SAE Email: PDF content length: ' . strlen( $pdf_content ) );
 
 			// Write PDF to file.
 			$written = file_put_contents( $pdf_path, $pdf_content ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 
 			if ( false === $written ) {
+				error_log( 'SAE Email: Failed to write PDF to file' );
 				return new \WP_Error( 'pdf_write_failed', __( 'Failed to write PDF file.', 'serenisoft-atum-enhancer' ) );
 			}
 
+			error_log( 'SAE Email: PDF written successfully, bytes: ' . $written );
 			return $pdf_path;
 
 		} catch ( \Exception $e ) {
+			error_log( 'SAE Email: Exception in generate_pdf: ' . $e->getMessage() );
 			return new \WP_Error( 'pdf_exception', $e->getMessage() );
 		}
 

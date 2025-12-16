@@ -52,6 +52,14 @@ class Settings {
 		// AJAX handler for saving closed periods (bypasses ATUM's HTML field limitation).
 		add_action( 'wp_ajax_sae_save_closed_periods', array( $this, 'ajax_save_closed_periods' ) );
 
+		// AJAX handler for exporting suppliers.
+		add_action( 'wp_ajax_sae_export_suppliers', array( $this, 'ajax_export_suppliers' ) );
+
+		// AJAX handlers for product-supplier mapping.
+		add_action( 'wp_ajax_sae_export_product_suppliers', array( $this, 'ajax_export_product_suppliers' ) );
+		add_action( 'wp_ajax_sae_preview_product_suppliers', array( $this, 'ajax_preview_product_suppliers' ) );
+		add_action( 'wp_ajax_sae_import_product_suppliers', array( $this, 'ajax_import_product_suppliers' ) );
+
 		// Filter to hide backordered on PO PDF.
 		add_filter( 'atum/atum_order/po_report/hidden_item_meta', array( $this, 'filter_po_pdf_hidden_meta' ) );
 
@@ -77,7 +85,7 @@ class Settings {
 				'sae_closed_periods'      => __( 'Closed Periods', 'serenisoft-atum-enhancer' ),
 				'sae_po_pdf'              => __( 'PO PDF', 'serenisoft-atum-enhancer' ),
 				'sae_po_email'            => __( 'PO Email', 'serenisoft-atum-enhancer' ),
-				'sae_supplier_import'     => __( 'Supplier Import', 'serenisoft-atum-enhancer' ),
+				'sae_import_export'       => __( 'Import & Export', 'serenisoft-atum-enhancer' ),
 			),
 		);
 
@@ -292,12 +300,39 @@ class Settings {
 			),
 		);
 
-		// Supplier Import Settings.
+		// Import & Export Settings.
 		$defaults['sae_supplier_import'] = array(
 			'group'   => self::TAB_KEY,
-			'section' => 'sae_supplier_import',
+			'section' => 'sae_import_export',
 			'name'    => __( 'Import Suppliers from CSV', 'serenisoft-atum-enhancer' ),
 			'desc'    => __( 'Upload a CSV file with supplier data. Duplicates (by code or name) will be skipped.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'html',
+			'default' => '',
+		);
+
+		$defaults['sae_supplier_export'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_import_export',
+			'name'    => __( 'Export Suppliers to CSV', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Download all suppliers as a CSV file.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'html',
+			'default' => '',
+		);
+
+		$defaults['sae_product_supplier_export'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_import_export',
+			'name'    => __( 'Export Product-Supplier Mapping', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Download the mapping between products (SKU) and suppliers (Code).', 'serenisoft-atum-enhancer' ),
+			'type'    => 'html',
+			'default' => '',
+		);
+
+		$defaults['sae_product_supplier_import'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_import_export',
+			'name'    => __( 'Import Product-Supplier Mapping', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Upload a CSV file to update the supplier assignments for products.', 'serenisoft-atum-enhancer' ),
 			'type'    => 'html',
 			'default' => '',
 		);
@@ -454,6 +489,109 @@ class Settings {
 	}
 
 	/**
+	 * Get the export form HTML
+	 *
+	 * @since 0.9.15
+	 *
+	 * @return string HTML for the export form.
+	 */
+	private function get_export_form_html() {
+
+		ob_start();
+		?>
+		<div class="sae-export-form">
+			<p class="description">
+				<?php esc_html_e( 'Export all suppliers to a CSV file. The file will include: Code, Name, Tax Number, Phone, Fax, Email, Address, City, Zip Code, Country, Lead Time, and more.', 'serenisoft-atum-enhancer' ); ?>
+			</p>
+
+			<div class="sae-button-group" style="margin-top: 10px;">
+				<button type="button" class="button button-primary btn-styled" id="sae-export-btn">
+					<?php esc_html_e( 'Export Suppliers', 'serenisoft-atum-enhancer' ); ?>
+				</button>
+				<span class="spinner" style="float: none; margin-top: 0;"></span>
+			</div>
+
+			<div id="sae-export-result" style="margin-top: 10px;"></div>
+		</div>
+		<?php
+		return ob_get_clean();
+
+	}
+
+	/**
+	 * Get the product-supplier export form HTML
+	 *
+	 * @since 0.9.15
+	 *
+	 * @return string HTML for the product-supplier export form.
+	 */
+	private function get_product_supplier_export_html() {
+
+		ob_start();
+		?>
+		<div class="sae-product-supplier-export-form">
+			<p class="description">
+				<?php esc_html_e( 'Export all products with their supplier assignments. Columns: Product SKU, Product Name, Supplier Code, Supplier Name, Supplier SKU.', 'serenisoft-atum-enhancer' ); ?>
+			</p>
+
+			<div class="sae-button-group" style="margin-top: 10px;">
+				<button type="button" class="button button-primary btn-styled" id="sae-product-supplier-export-btn">
+					<?php esc_html_e( 'Export Product-Supplier Mapping', 'serenisoft-atum-enhancer' ); ?>
+				</button>
+				<span class="spinner" style="float: none; margin-top: 0;"></span>
+			</div>
+
+			<div id="sae-product-supplier-export-result" style="margin-top: 10px;"></div>
+		</div>
+		<?php
+		return ob_get_clean();
+
+	}
+
+	/**
+	 * Get the product-supplier import form HTML
+	 *
+	 * @since 0.9.15
+	 *
+	 * @return string HTML for the product-supplier import form.
+	 */
+	private function get_product_supplier_import_html() {
+
+		ob_start();
+		?>
+		<div class="sae-product-supplier-import-form">
+			<p class="description">
+				<?php esc_html_e( 'Upload a CSV file to update supplier assignments for products. Required columns: Product SKU, Supplier Code. Optional: Supplier SKU.', 'serenisoft-atum-enhancer' ); ?>
+			</p>
+
+			<div class="sae-button-group" style="margin-top: 10px;">
+				<input type="file" id="sae-product-supplier-csv-file" accept=".csv" style="margin-right: 10px;" />
+				<button type="button" class="button btn-styled" id="sae-product-supplier-preview-btn">
+					<?php esc_html_e( 'Preview', 'serenisoft-atum-enhancer' ); ?>
+				</button>
+				<span class="spinner" style="float: none; margin-top: 0;"></span>
+			</div>
+
+			<div id="sae-product-supplier-preview-result" style="margin-top: 10px;"></div>
+
+			<div id="sae-product-supplier-import-actions" style="margin-top: 10px; display: none;">
+				<button type="button" class="button button-primary btn-styled" id="sae-product-supplier-import-btn">
+					<?php esc_html_e( 'Import', 'serenisoft-atum-enhancer' ); ?>
+				</button>
+				<button type="button" class="button btn-styled" id="sae-product-supplier-cancel-btn" style="margin-left: 10px;">
+					<?php esc_html_e( 'Cancel', 'serenisoft-atum-enhancer' ); ?>
+				</button>
+				<span class="spinner" style="float: none; margin-top: 0;"></span>
+			</div>
+
+			<div id="sae-product-supplier-import-result" style="margin-top: 10px;"></div>
+		</div>
+		<?php
+		return ob_get_clean();
+
+	}
+
+	/**
 	 * Get the generate button HTML
 	 *
 	 * @since 1.0.0
@@ -604,6 +742,18 @@ class Settings {
 			return $this->get_closed_periods_html();
 		}
 
+		if ( 'sae_supplier_export' === $args['id'] ) {
+			return $this->get_export_form_html();
+		}
+
+		if ( 'sae_product_supplier_export' === $args['id'] ) {
+			return $this->get_product_supplier_export_html();
+		}
+
+		if ( 'sae_product_supplier_import' === $args['id'] ) {
+			return $this->get_product_supplier_import_html();
+		}
+
 		return $output;
 
 	}
@@ -668,6 +818,536 @@ class Settings {
 	}
 
 	/**
+	 * AJAX handler for exporting suppliers to CSV
+	 *
+	 * @since 0.9.15
+	 */
+	public function ajax_export_suppliers() {
+
+		check_ajax_referer( 'sae_export_suppliers', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Get all suppliers.
+		$suppliers = get_posts( array(
+			'post_type'      => \Atum\Suppliers\Suppliers::POST_TYPE,
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'orderby'        => 'title',
+			'order'          => 'ASC',
+		) );
+
+		if ( empty( $suppliers ) ) {
+			wp_send_json_error( array( 'message' => __( 'No suppliers found to export.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Define CSV columns.
+		$columns = array(
+			'code'           => __( 'Code', 'serenisoft-atum-enhancer' ),
+			'name'           => __( 'Name', 'serenisoft-atum-enhancer' ),
+			'tax_number'     => __( 'Tax Number', 'serenisoft-atum-enhancer' ),
+			'phone'          => __( 'Phone', 'serenisoft-atum-enhancer' ),
+			'fax'            => __( 'Fax', 'serenisoft-atum-enhancer' ),
+			'general_email'  => __( 'General Email', 'serenisoft-atum-enhancer' ),
+			'ordering_email' => __( 'Ordering Email', 'serenisoft-atum-enhancer' ),
+			'website'        => __( 'Website', 'serenisoft-atum-enhancer' ),
+			'ordering_url'   => __( 'Ordering URL', 'serenisoft-atum-enhancer' ),
+			'address'        => __( 'Address', 'serenisoft-atum-enhancer' ),
+			'address_2'      => __( 'Address 2', 'serenisoft-atum-enhancer' ),
+			'city'           => __( 'City', 'serenisoft-atum-enhancer' ),
+			'state'          => __( 'State', 'serenisoft-atum-enhancer' ),
+			'zip_code'       => __( 'Zip Code', 'serenisoft-atum-enhancer' ),
+			'country'        => __( 'Country', 'serenisoft-atum-enhancer' ),
+			'currency'       => __( 'Currency', 'serenisoft-atum-enhancer' ),
+			'lead_time'      => __( 'Lead Time (days)', 'serenisoft-atum-enhancer' ),
+			'discount'       => __( 'Discount (%)', 'serenisoft-atum-enhancer' ),
+			'tax_rate'       => __( 'Tax Rate (%)', 'serenisoft-atum-enhancer' ),
+			'location'       => __( 'Location', 'serenisoft-atum-enhancer' ),
+			'description'    => __( 'Description', 'serenisoft-atum-enhancer' ),
+		);
+
+		// Build CSV content.
+		$csv_rows = array();
+
+		// Header row.
+		$csv_rows[] = array_values( $columns );
+
+		// Data rows.
+		foreach ( $suppliers as $supplier_post ) {
+			$supplier = new \Atum\Suppliers\Supplier( $supplier_post->ID );
+			$row      = array();
+
+			foreach ( array_keys( $columns ) as $field ) {
+				if ( 'name' === $field ) {
+					$row[] = $supplier->name ?: '';
+				} else {
+					$row[] = $supplier->$field ?? '';
+				}
+			}
+
+			$csv_rows[] = $row;
+		}
+
+		// Generate CSV file.
+		$upload_dir = wp_upload_dir();
+		$temp_dir   = $upload_dir['basedir'] . '/sae-temp';
+
+		if ( ! is_dir( $temp_dir ) ) {
+			wp_mkdir_p( $temp_dir );
+		}
+
+		$filename = 'suppliers-export-' . gmdate( 'Y-m-d-His' ) . '.csv';
+		$filepath = $temp_dir . '/' . $filename;
+
+		$handle = fopen( $filepath, 'w' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+
+		if ( false === $handle ) {
+			wp_send_json_error( array( 'message' => __( 'Could not create export file.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Add BOM for Excel UTF-8 compatibility.
+		fwrite( $handle, "\xEF\xBB\xBF" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
+
+		// Write rows.
+		foreach ( $csv_rows as $row ) {
+			fputcsv( $handle, $row );
+		}
+
+		fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+
+		// Return download URL.
+		$download_url = $upload_dir['baseurl'] . '/sae-temp/' . $filename;
+
+		wp_send_json_success( array(
+			'message'      => sprintf(
+				/* translators: %d: number of suppliers exported */
+				__( 'Exported %d suppliers successfully.', 'serenisoft-atum-enhancer' ),
+				count( $suppliers )
+			),
+			'download_url' => $download_url,
+			'filename'     => $filename,
+			'count'        => count( $suppliers ),
+		) );
+
+	}
+
+	/**
+	 * AJAX handler for exporting product-supplier mapping to CSV
+	 *
+	 * @since 0.9.15
+	 */
+	public function ajax_export_product_suppliers() {
+
+		check_ajax_referer( 'sae_product_supplier_export', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		global $wpdb;
+
+		// Get all products with ATUM data (including supplier info).
+		$atum_table = $wpdb->prefix . 'atum_product_data';
+
+		// Check if ATUM table exists.
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $atum_table ) ) !== $atum_table ) {
+			wp_send_json_error( array( 'message' => __( 'ATUM product data table not found.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Get products with their SKU and supplier data.
+		$results = $wpdb->get_results(
+			"SELECT
+				p.ID as product_id,
+				p.post_title as product_name,
+				pm.meta_value as product_sku,
+				apd.supplier_id,
+				apd.supplier_sku
+			FROM {$wpdb->posts} p
+			LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_sku'
+			LEFT JOIN {$atum_table} apd ON p.ID = apd.product_id
+			WHERE p.post_type IN ('product', 'product_variation')
+			AND p.post_status = 'publish'
+			ORDER BY p.post_title ASC"
+		);
+
+		if ( empty( $results ) ) {
+			wp_send_json_error( array( 'message' => __( 'No products found.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Build supplier lookup by ID.
+		$supplier_lookup = array();
+		$suppliers       = get_posts( array(
+			'post_type'      => \Atum\Suppliers\Suppliers::POST_TYPE,
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+		) );
+
+		foreach ( $suppliers as $supplier_post ) {
+			$supplier                              = new \Atum\Suppliers\Supplier( $supplier_post->ID );
+			$supplier_lookup[ $supplier_post->ID ] = array(
+				'code' => $supplier->code ?: '',
+				'name' => $supplier->name ?: '',
+			);
+		}
+
+		// Define CSV columns.
+		$columns = array(
+			__( 'Product SKU', 'serenisoft-atum-enhancer' ),
+			__( 'Product Name', 'serenisoft-atum-enhancer' ),
+			__( 'Supplier Code', 'serenisoft-atum-enhancer' ),
+			__( 'Supplier Name', 'serenisoft-atum-enhancer' ),
+			__( 'Supplier SKU', 'serenisoft-atum-enhancer' ),
+		);
+
+		// Build CSV content.
+		$csv_rows   = array();
+		$csv_rows[] = $columns;
+
+		foreach ( $results as $row ) {
+			$supplier_code = '';
+			$supplier_name = '';
+
+			if ( ! empty( $row->supplier_id ) && isset( $supplier_lookup[ $row->supplier_id ] ) ) {
+				$supplier_code = $supplier_lookup[ $row->supplier_id ]['code'];
+				$supplier_name = $supplier_lookup[ $row->supplier_id ]['name'];
+			}
+
+			$csv_rows[] = array(
+				$row->product_sku ?: '',
+				$row->product_name ?: '',
+				$supplier_code,
+				$supplier_name,
+				$row->supplier_sku ?: '',
+			);
+		}
+
+		// Generate CSV file.
+		$upload_dir = wp_upload_dir();
+		$temp_dir   = $upload_dir['basedir'] . '/sae-temp';
+
+		if ( ! is_dir( $temp_dir ) ) {
+			wp_mkdir_p( $temp_dir );
+		}
+
+		$filename = 'product-supplier-mapping-' . gmdate( 'Y-m-d-His' ) . '.csv';
+		$filepath = $temp_dir . '/' . $filename;
+
+		$handle = fopen( $filepath, 'w' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+
+		if ( false === $handle ) {
+			wp_send_json_error( array( 'message' => __( 'Could not create export file.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Add BOM for Excel UTF-8 compatibility.
+		fwrite( $handle, "\xEF\xBB\xBF" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
+
+		// Write rows.
+		foreach ( $csv_rows as $row ) {
+			fputcsv( $handle, $row );
+		}
+
+		fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+
+		// Return download URL.
+		$download_url = $upload_dir['baseurl'] . '/sae-temp/' . $filename;
+
+		wp_send_json_success( array(
+			'message'      => sprintf(
+				/* translators: %d: number of products exported */
+				__( 'Exported %d products successfully.', 'serenisoft-atum-enhancer' ),
+				count( $results )
+			),
+			'download_url' => $download_url,
+			'filename'     => $filename,
+			'count'        => count( $results ),
+		) );
+
+	}
+
+	/**
+	 * AJAX handler for previewing product-supplier import
+	 *
+	 * @since 0.9.15
+	 */
+	public function ajax_preview_product_suppliers() {
+
+		check_ajax_referer( 'sae_product_supplier_import', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		if ( empty( $_FILES['csv_file'] ) || empty( $_FILES['csv_file']['tmp_name'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'No file uploaded.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		$file = $_FILES['csv_file']['tmp_name'];
+
+		$handle = fopen( $file, 'r' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+		if ( false === $handle ) {
+			wp_send_json_error( array( 'message' => __( 'Could not read the CSV file.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Read header row.
+		$header = fgetcsv( $handle );
+		if ( false === $header ) {
+			fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+			wp_send_json_error( array( 'message' => __( 'Invalid CSV file format.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Clean BOM from first column if present.
+		$header[0] = preg_replace( '/^\xEF\xBB\xBF/', '', $header[0] );
+
+		// Find column indices.
+		$col_indices = $this->find_product_supplier_columns( $header );
+
+		if ( ! isset( $col_indices['product_sku'] ) ) {
+			fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+			wp_send_json_error( array( 'message' => __( 'Required column "Product SKU" not found in CSV.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		if ( ! isset( $col_indices['supplier_code'] ) ) {
+			fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+			wp_send_json_error( array( 'message' => __( 'Required column "Supplier Code" not found in CSV.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Build supplier lookup by code.
+		$supplier_lookup = $this->build_supplier_lookup_by_code();
+
+		// Analyze rows.
+		$rows        = array();
+		$will_update = 0;
+		$will_skip   = 0;
+
+		while ( ( $row = fgetcsv( $handle ) ) !== false ) {
+			if ( empty( array_filter( $row ) ) ) {
+				continue;
+			}
+
+			$product_sku   = isset( $row[ $col_indices['product_sku'] ] ) ? trim( $row[ $col_indices['product_sku'] ] ) : '';
+			$supplier_code = isset( $col_indices['supplier_code'], $row[ $col_indices['supplier_code'] ] ) ? trim( $row[ $col_indices['supplier_code'] ] ) : '';
+			$supplier_sku  = isset( $col_indices['supplier_sku'], $row[ $col_indices['supplier_sku'] ] ) ? trim( $row[ $col_indices['supplier_sku'] ] ) : '';
+
+			$status = 'update';
+			$reason = '';
+
+			// Check if product exists.
+			$product_id = wc_get_product_id_by_sku( $product_sku );
+			if ( ! $product_id ) {
+				$status = 'skip';
+				$reason = __( 'Product not found', 'serenisoft-atum-enhancer' );
+			} elseif ( ! empty( $supplier_code ) && ! isset( $supplier_lookup[ $supplier_code ] ) ) {
+				$status = 'skip';
+				$reason = __( 'Supplier not found', 'serenisoft-atum-enhancer' );
+			}
+
+			if ( 'update' === $status ) {
+				$will_update++;
+			} else {
+				$will_skip++;
+			}
+
+			$rows[] = array(
+				'product_sku'   => $product_sku,
+				'supplier_code' => $supplier_code,
+				'supplier_sku'  => $supplier_sku,
+				'status'        => $status,
+				'reason'        => $reason,
+			);
+		}
+
+		fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+
+		wp_send_json_success( array(
+			'rows'        => $rows,
+			'will_update' => $will_update,
+			'will_skip'   => $will_skip,
+			'total'       => count( $rows ),
+		) );
+
+	}
+
+	/**
+	 * AJAX handler for importing product-supplier mapping
+	 *
+	 * @since 0.9.15
+	 */
+	public function ajax_import_product_suppliers() {
+
+		check_ajax_referer( 'sae_product_supplier_import', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		if ( empty( $_FILES['csv_file'] ) || empty( $_FILES['csv_file']['tmp_name'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'No file uploaded.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		$file = $_FILES['csv_file']['tmp_name'];
+
+		$handle = fopen( $file, 'r' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+		if ( false === $handle ) {
+			wp_send_json_error( array( 'message' => __( 'Could not read the CSV file.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Read header row.
+		$header = fgetcsv( $handle );
+		if ( false === $header ) {
+			fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+			wp_send_json_error( array( 'message' => __( 'Invalid CSV file format.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Clean BOM from first column if present.
+		$header[0] = preg_replace( '/^\xEF\xBB\xBF/', '', $header[0] );
+
+		// Find column indices.
+		$col_indices = $this->find_product_supplier_columns( $header );
+
+		if ( ! isset( $col_indices['product_sku'] ) || ! isset( $col_indices['supplier_code'] ) ) {
+			fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+			wp_send_json_error( array( 'message' => __( 'Required columns not found in CSV.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Build supplier lookup by code.
+		$supplier_lookup = $this->build_supplier_lookup_by_code();
+
+		$updated = 0;
+		$skipped = 0;
+		$errors  = array();
+
+		while ( ( $row = fgetcsv( $handle ) ) !== false ) {
+			if ( empty( array_filter( $row ) ) ) {
+				continue;
+			}
+
+			$product_sku   = isset( $row[ $col_indices['product_sku'] ] ) ? trim( $row[ $col_indices['product_sku'] ] ) : '';
+			$supplier_code = isset( $col_indices['supplier_code'], $row[ $col_indices['supplier_code'] ] ) ? trim( $row[ $col_indices['supplier_code'] ] ) : '';
+			$supplier_sku  = isset( $col_indices['supplier_sku'], $row[ $col_indices['supplier_sku'] ] ) ? trim( $row[ $col_indices['supplier_sku'] ] ) : '';
+
+			// Get product by SKU.
+			$product_id = wc_get_product_id_by_sku( $product_sku );
+			if ( ! $product_id ) {
+				$skipped++;
+				continue;
+			}
+
+			// Get supplier ID from code.
+			$supplier_id = 0;
+			if ( ! empty( $supplier_code ) ) {
+				if ( isset( $supplier_lookup[ $supplier_code ] ) ) {
+					$supplier_id = $supplier_lookup[ $supplier_code ];
+				} else {
+					$skipped++;
+					continue;
+				}
+			}
+
+			// Update product supplier using ATUM's method.
+			try {
+				$product = \Atum\Inc\Helpers::get_atum_product( $product_id );
+
+				if ( $product && method_exists( $product, 'set_supplier_id' ) ) {
+					$product->set_supplier_id( $supplier_id );
+
+					if ( ! empty( $supplier_sku ) && method_exists( $product, 'set_supplier_sku' ) ) {
+						$product->set_supplier_sku( $supplier_sku );
+					}
+
+					$product->save_atum_data();
+					$updated++;
+				} else {
+					$skipped++;
+				}
+			} catch ( \Exception $e ) {
+				$errors[] = sprintf(
+					/* translators: 1: product SKU, 2: error message */
+					__( 'Error updating %1$s: %2$s', 'serenisoft-atum-enhancer' ),
+					$product_sku,
+					$e->getMessage()
+				);
+				$skipped++;
+			}
+		}
+
+		fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+
+		wp_send_json_success( array(
+			'updated' => $updated,
+			'skipped' => $skipped,
+			'errors'  => $errors,
+			'message' => sprintf(
+				/* translators: 1: updated count, 2: skipped count */
+				__( 'Import complete. %1$d products updated, %2$d skipped.', 'serenisoft-atum-enhancer' ),
+				$updated,
+				$skipped
+			),
+		) );
+
+	}
+
+	/**
+	 * Find column indices for product-supplier CSV
+	 *
+	 * @since 0.9.15
+	 *
+	 * @param array $header CSV header row.
+	 *
+	 * @return array Column indices.
+	 */
+	private function find_product_supplier_columns( $header ) {
+
+		$column_mapping = array(
+			'Product SKU'   => 'product_sku',
+			'Supplier Code' => 'supplier_code',
+			'Supplier SKU'  => 'supplier_sku',
+		);
+
+		$indices = array();
+
+		foreach ( $header as $index => $column_name ) {
+			$column_name = trim( $column_name );
+			if ( isset( $column_mapping[ $column_name ] ) ) {
+				$indices[ $column_mapping[ $column_name ] ] = $index;
+			}
+		}
+
+		return $indices;
+
+	}
+
+	/**
+	 * Build supplier lookup array by code
+	 *
+	 * @since 0.9.15
+	 *
+	 * @return array Supplier IDs keyed by code.
+	 */
+	private function build_supplier_lookup_by_code() {
+
+		$lookup    = array();
+		$suppliers = get_posts( array(
+			'post_type'      => \Atum\Suppliers\Suppliers::POST_TYPE,
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+		) );
+
+		foreach ( $suppliers as $supplier_post ) {
+			$supplier = new \Atum\Suppliers\Supplier( $supplier_post->ID );
+			$code     = $supplier->code;
+
+			if ( ! empty( $code ) ) {
+				$lookup[ $code ] = $supplier_post->ID;
+			}
+		}
+
+		return $lookup;
+
+	}
+
+	/**
 	 * Filter hidden item meta on PO PDF exports
 	 *
 	 * @since 0.9.11
@@ -725,9 +1405,12 @@ class Settings {
 			return;
 		}
 
-		$import_nonce   = wp_create_nonce( 'sae_import_suppliers' );
-		$generate_nonce = wp_create_nonce( 'sae_generate_po_suggestions' );
-		$ajax_url       = esc_url( admin_url( 'admin-ajax.php' ) );
+		$import_nonce                 = wp_create_nonce( 'sae_import_suppliers' );
+		$generate_nonce               = wp_create_nonce( 'sae_generate_po_suggestions' );
+		$export_nonce                 = wp_create_nonce( 'sae_export_suppliers' );
+		$product_supplier_export_nonce = wp_create_nonce( 'sae_product_supplier_export' );
+		$product_supplier_import_nonce = wp_create_nonce( 'sae_product_supplier_import' );
+		$ajax_url                     = esc_url( admin_url( 'admin-ajax.php' ) );
 		?>
 		<style>
 		/* Force display of Enable Automatic Suggestions checkbox */
@@ -1043,6 +1726,223 @@ class Settings {
 					error: function() {
 						$btn.prop('disabled', false);
 						$('#sae-cancel-btn').prop('disabled', false);
+						$result.html('<div class="notice notice-error"><p><?php echo esc_js( __( 'An error occurred during import.', 'serenisoft-atum-enhancer' ) ); ?></p></div>');
+					}
+				});
+			});
+
+			// === Supplier Export Scripts ===
+			$(document).on('click', '#sae-export-btn', function() {
+				var $btn = $(this);
+				var $spinner = $btn.next('.spinner');
+				var $result = $('#sae-export-result');
+
+				$btn.prop('disabled', true);
+				$spinner.addClass('is-active');
+				$result.html('');
+
+				$.ajax({
+					url: '<?php echo $ajax_url; ?>',
+					type: 'POST',
+					data: {
+						action: 'sae_export_suppliers',
+						nonce: '<?php echo esc_js( $export_nonce ); ?>'
+					},
+					success: function(response) {
+						$btn.prop('disabled', false);
+						$spinner.removeClass('is-active');
+
+						if (response.success) {
+							var html = '<div class="notice notice-success">';
+							html += '<p>' + response.data.message + '</p>';
+							html += '<p><a href="' + response.data.download_url + '" class="button" download="' + response.data.filename + '">';
+							html += '<?php echo esc_js( __( 'Download CSV', 'serenisoft-atum-enhancer' ) ); ?>';
+							html += '</a></p>';
+							html += '</div>';
+							$result.html(html);
+						} else {
+							$result.html('<div class="notice notice-error"><p>' + response.data.message + '</p></div>');
+						}
+					},
+					error: function() {
+						$btn.prop('disabled', false);
+						$spinner.removeClass('is-active');
+						$result.html('<div class="notice notice-error"><p><?php echo esc_js( __( 'An error occurred during export.', 'serenisoft-atum-enhancer' ) ); ?></p></div>');
+					}
+				});
+			});
+
+			// === Product-Supplier Export Scripts ===
+			$(document).on('click', '#sae-product-supplier-export-btn', function() {
+				var $btn = $(this);
+				var $spinner = $btn.next('.spinner');
+				var $result = $('#sae-product-supplier-export-result');
+
+				$btn.prop('disabled', true);
+				$spinner.addClass('is-active');
+				$result.html('');
+
+				$.ajax({
+					url: '<?php echo $ajax_url; ?>',
+					type: 'POST',
+					data: {
+						action: 'sae_export_product_suppliers',
+						nonce: '<?php echo esc_js( $product_supplier_export_nonce ); ?>'
+					},
+					success: function(response) {
+						$btn.prop('disabled', false);
+						$spinner.removeClass('is-active');
+
+						if (response.success) {
+							var html = '<div class="notice notice-success">';
+							html += '<p>' + response.data.message + '</p>';
+							html += '<p><a href="' + response.data.download_url + '" class="button" download="' + response.data.filename + '">';
+							html += '<?php echo esc_js( __( 'Download CSV', 'serenisoft-atum-enhancer' ) ); ?>';
+							html += '</a></p>';
+							html += '</div>';
+							$result.html(html);
+						} else {
+							$result.html('<div class="notice notice-error"><p>' + response.data.message + '</p></div>');
+						}
+					},
+					error: function() {
+						$btn.prop('disabled', false);
+						$spinner.removeClass('is-active');
+						$result.html('<div class="notice notice-error"><p><?php echo esc_js( __( 'An error occurred during export.', 'serenisoft-atum-enhancer' ) ); ?></p></div>');
+					}
+				});
+			});
+
+			// === Product-Supplier Import Scripts ===
+			var productSupplierSelectedFile = null;
+
+			// Preview button
+			$(document).on('click', '#sae-product-supplier-preview-btn', function() {
+				var fileInput = $('#sae-product-supplier-csv-file')[0];
+				if (!fileInput.files.length) {
+					alert('<?php echo esc_js( __( 'Please select a CSV file.', 'serenisoft-atum-enhancer' ) ); ?>');
+					return;
+				}
+
+				productSupplierSelectedFile = fileInput.files[0];
+				var formData = new FormData();
+				formData.append('action', 'sae_preview_product_suppliers');
+				formData.append('nonce', '<?php echo esc_js( $product_supplier_import_nonce ); ?>');
+				formData.append('csv_file', productSupplierSelectedFile);
+
+				var $btn = $(this);
+				var $spinner = $btn.next('.spinner');
+				var $preview = $('#sae-product-supplier-preview-result');
+
+				$btn.prop('disabled', true);
+				$spinner.addClass('is-active');
+				$preview.html('');
+				$('#sae-product-supplier-import-actions').hide();
+				$('#sae-product-supplier-import-result').html('');
+
+				$.ajax({
+					url: '<?php echo $ajax_url; ?>',
+					type: 'POST',
+					data: formData,
+					processData: false,
+					contentType: false,
+					success: function(response) {
+						$btn.prop('disabled', false);
+						$spinner.removeClass('is-active');
+
+						if (response.success) {
+							var data = response.data;
+							var html = '<p><strong><?php echo esc_js( __( 'Preview:', 'serenisoft-atum-enhancer' ) ); ?></strong> ';
+							html += data.will_update + ' <?php echo esc_js( __( 'will be updated', 'serenisoft-atum-enhancer' ) ); ?>, ';
+							html += data.will_skip + ' <?php echo esc_js( __( 'will be skipped', 'serenisoft-atum-enhancer' ) ); ?></p>';
+
+							html += '<table class="sae-preview-table"><thead><tr>';
+							html += '<th><?php echo esc_js( __( 'Product SKU', 'serenisoft-atum-enhancer' ) ); ?></th>';
+							html += '<th><?php echo esc_js( __( 'Supplier Code', 'serenisoft-atum-enhancer' ) ); ?></th>';
+							html += '<th><?php echo esc_js( __( 'Status', 'serenisoft-atum-enhancer' ) ); ?></th>';
+							html += '</tr></thead><tbody>';
+
+							data.rows.forEach(function(row) {
+								var statusClass = 'sae-status-' + row.status;
+								var statusText = row.status === 'update' ? '<?php echo esc_js( __( 'Will update', 'serenisoft-atum-enhancer' ) ); ?>' : row.reason;
+								html += '<tr>';
+								html += '<td>' + (row.product_sku || '-') + '</td>';
+								html += '<td>' + (row.supplier_code || '-') + '</td>';
+								html += '<td class="' + statusClass + '">' + statusText + '</td>';
+								html += '</tr>';
+							});
+
+							html += '</tbody></table>';
+							$preview.html(html);
+
+							if (data.will_update > 0) {
+								$('#sae-product-supplier-import-actions').show();
+							}
+						} else {
+							$preview.html('<div class="notice notice-error"><p>' + response.data.message + '</p></div>');
+						}
+					},
+					error: function() {
+						$btn.prop('disabled', false);
+						$spinner.removeClass('is-active');
+						$preview.html('<div class="notice notice-error"><p><?php echo esc_js( __( 'An error occurred during preview.', 'serenisoft-atum-enhancer' ) ); ?></p></div>');
+					}
+				});
+			});
+
+			// Cancel button
+			$(document).on('click', '#sae-product-supplier-cancel-btn', function() {
+				$('#sae-product-supplier-preview-result').html('');
+				$('#sae-product-supplier-import-actions').hide();
+				$('#sae-product-supplier-csv-file').val('');
+				productSupplierSelectedFile = null;
+			});
+
+			// Import button
+			$(document).on('click', '#sae-product-supplier-import-btn', function() {
+				if (!productSupplierSelectedFile) {
+					alert('<?php echo esc_js( __( 'No file selected.', 'serenisoft-atum-enhancer' ) ); ?>');
+					return;
+				}
+
+				var formData = new FormData();
+				formData.append('action', 'sae_import_product_suppliers');
+				formData.append('nonce', '<?php echo esc_js( $product_supplier_import_nonce ); ?>');
+				formData.append('csv_file', productSupplierSelectedFile);
+
+				var $btn = $(this);
+				var $result = $('#sae-product-supplier-import-result');
+
+				$btn.prop('disabled', true);
+				$('#sae-product-supplier-cancel-btn').prop('disabled', true);
+
+				$.ajax({
+					url: '<?php echo $ajax_url; ?>',
+					type: 'POST',
+					data: formData,
+					processData: false,
+					contentType: false,
+					success: function(response) {
+						$btn.prop('disabled', false);
+						$('#sae-product-supplier-cancel-btn').prop('disabled', false);
+
+						if (response.success) {
+							$result.html('<div class="notice notice-success"><p>' + response.data.message + '</p></div>');
+							$('#sae-product-supplier-preview-result').html('');
+							$('#sae-product-supplier-import-actions').hide();
+							$('#sae-product-supplier-csv-file').val('');
+							productSupplierSelectedFile = null;
+
+							if (response.data.errors && response.data.errors.length) {
+								$result.append('<div class="notice notice-warning"><p><strong><?php echo esc_js( __( 'Errors:', 'serenisoft-atum-enhancer' ) ); ?></strong><br>' + response.data.errors.join('<br>') + '</p></div>');
+							}
+						} else {
+							$result.html('<div class="notice notice-error"><p>' + response.data.message + '</p></div>');
+						}
+					},
+					error: function() {
+						$btn.prop('disabled', false);
+						$('#sae-product-supplier-cancel-btn').prop('disabled', false);
 						$result.html('<div class="notice notice-error"><p><?php echo esc_js( __( 'An error occurred during import.', 'serenisoft-atum-enhancer' ) ); ?></p></div>');
 					}
 				});
