@@ -992,13 +992,13 @@ class Settings {
 			);
 		}
 
-		// Define CSV columns.
+		// Define CSV columns (use fixed English names to match import).
 		$columns = array(
-			__( 'Product SKU', 'serenisoft-atum-enhancer' ),
-			__( 'Product Name', 'serenisoft-atum-enhancer' ),
-			__( 'Supplier Code', 'serenisoft-atum-enhancer' ),
-			__( 'Supplier Name', 'serenisoft-atum-enhancer' ),
-			__( 'Supplier SKU', 'serenisoft-atum-enhancer' ),
+			'Product SKU',
+			'Product Name',
+			'Supplier Code',
+			'Supplier Name',
+			'Supplier SKU',
 		);
 
 		// Build CSV content.
@@ -1097,8 +1097,10 @@ class Settings {
 			wp_send_json_error( array( 'message' => __( 'Invalid CSV file format.', 'serenisoft-atum-enhancer' ) ) );
 		}
 
-		// Clean BOM from first column if present.
+		// Clean BOM from first column if present (multiple methods for robustness).
 		$header[0] = preg_replace( '/^\xEF\xBB\xBF/', '', $header[0] );
+		$header[0] = str_replace( "\xEF\xBB\xBF", '', $header[0] );
+		$header[0] = trim( $header[0], "\xEF\xBB\xBF \t\n\r\0\x0B" );
 
 		// Find column indices.
 		$col_indices = $this->find_product_supplier_columns( $header );
@@ -1200,8 +1202,10 @@ class Settings {
 			wp_send_json_error( array( 'message' => __( 'Invalid CSV file format.', 'serenisoft-atum-enhancer' ) ) );
 		}
 
-		// Clean BOM from first column if present.
+		// Clean BOM from first column if present (multiple methods for robustness).
 		$header[0] = preg_replace( '/^\xEF\xBB\xBF/', '', $header[0] );
+		$header[0] = str_replace( "\xEF\xBB\xBF", '', $header[0] );
+		$header[0] = trim( $header[0], "\xEF\xBB\xBF \t\n\r\0\x0B" );
 
 		// Find column indices.
 		$col_indices = $this->find_product_supplier_columns( $header );
@@ -1308,7 +1312,12 @@ class Settings {
 		$indices = array();
 
 		foreach ( $header as $index => $column_name ) {
+			// Clean and trim column name.
 			$column_name = trim( $column_name );
+			$column_name = preg_replace( '/^\xEF\xBB\xBF/', '', $column_name );
+			$column_name = str_replace( "\xEF\xBB\xBF", '', $column_name );
+			$column_name = trim( $column_name );
+
 			if ( isset( $column_mapping[ $column_name ] ) ) {
 				$indices[ $column_mapping[ $column_name ] ] = $index;
 			}
