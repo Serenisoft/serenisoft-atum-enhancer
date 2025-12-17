@@ -2,6 +2,15 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.18] - 2025-12-17
+
+### Fixed
+- **Dormant Products Sales Velocity**: Fixed incorrect sales velocity calculation for products that existed long before their first sale
+  - Now uses product creation date instead of first sale date for calculating average daily sales
+  - Prevents dormant products from being identified as high-velocity items
+  - Example: Product created 2 years ago, sold 4 units last week → now calculates 4/365 = 0.01/day (not 4/7 = 0.57/day)
+  - Significantly reduces over-ordering for slow-moving inventory
+
 ## [0.9.17] - 2025-12-17
 
 ### Fixed

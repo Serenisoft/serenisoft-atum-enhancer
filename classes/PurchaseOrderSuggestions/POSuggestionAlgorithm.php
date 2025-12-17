@@ -466,11 +466,17 @@ class POSuggestionAlgorithm {
 
 		$total_sales = (float) ( $sales_data->total_sales ?? 0 );
 
-		// Calculate days since first sale (minimum 1, maximum 365).
+		// Calculate days of history based on product creation date (not first sale).
+		// This prevents dormant products with recent first sales from appearing as high-velocity.
+		// Example: Product created 2 years ago, sold 4 units last week → 4/365 not 4/7.
 		$days_of_history = 365;
-		if ( ! empty( $sales_data->first_sale_date ) ) {
-			$first_sale      = strtotime( $sales_data->first_sale_date );
-			$days_of_history = max( 1, min( 365, ceil( ( time() - $first_sale ) / DAY_IN_SECONDS ) ) );
+		$product         = wc_get_product( $product_id );
+		if ( $product ) {
+			$date_created = $product->get_date_created();
+			if ( $date_created ) {
+				$product_age     = ceil( ( time() - $date_created->getTimestamp() ) / DAY_IN_SECONDS );
+				$days_of_history = max( 1, min( 365, $product_age ) );
+			}
 		}
 
 		// Use actual sales period, not always 365 days.
@@ -487,7 +493,6 @@ class POSuggestionAlgorithm {
 		if ( $use_seasonal && $days_of_history >= 365 ) {
 			$avg_daily = self::apply_seasonal_adjustment( $product_id, $avg_daily, $lead_time, $days_of_stock_target );
 		} elseif ( $use_seasonal && 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
-			$product = wc_get_product( $product_id );
 			$sku = $product ? ( $product->get_sku() ?: 'N/A' ) : 'N/A';
 			error_log( sprintf(
 				'SAE DEBUG: [Seasonal] [%s] SKIPPED - Only %d days of history (need 365 for seasonal analysis)',
