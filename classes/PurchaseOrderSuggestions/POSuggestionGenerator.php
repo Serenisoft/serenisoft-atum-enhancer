@@ -412,10 +412,13 @@ class POSuggestionGenerator {
 				return new \WP_Error( 'po_create_failed', __( 'Failed to create Purchase Order.', 'serenisoft-atum-enhancer' ) );
 			}
 
-			// Add supplier PO note to description (shows on PDF).
+			// Add global and supplier PO notes to description (shows on PDF).
+			$global_note   = Settings::get( 'sae_global_po_note', '' );
 			$supplier_note = SupplierFields::get_po_note( $supplier_id );
-			if ( ! empty( $supplier_note ) ) {
-				$po->set_description( $supplier_note );
+
+			$combined_notes = array_filter( array( $global_note, $supplier_note ) );
+			if ( ! empty( $combined_notes ) ) {
+				$po->set_description( implode( "\n\n", $combined_notes ) );
 				$po->save();
 			}
 

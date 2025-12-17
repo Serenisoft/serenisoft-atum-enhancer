@@ -2,6 +2,14 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.21] - 2025-12-17
+
+### Added
+- **Global PO Note**: New setting for a note that appears on ALL Purchase Orders
+  - Found in ATUM Settings → Enhancer → PO PDF Settings
+  - Combines with supplier-specific notes (global note appears first)
+  - Useful for standard terms, delivery instructions, or company-wide messages
+
 ## [0.9.20] - 2025-12-17
 
 ### Added

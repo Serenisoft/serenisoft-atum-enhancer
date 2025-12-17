@@ -423,6 +423,15 @@ class Settings {
 		);
 
 		// PO PDF Settings.
+		$defaults['sae_global_po_note'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_po_pdf',
+			'name'    => __( 'Global PO Note', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'Note to include on all Purchase Orders. This appears before any supplier-specific notes.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'textarea',
+			'default' => '',
+		);
+
 		$defaults['sae_hide_backordered_on_pdf'] = array(
 			'group'   => self::TAB_KEY,
 			'section' => 'sae_po_pdf',
