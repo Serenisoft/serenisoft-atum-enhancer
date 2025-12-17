@@ -1,0 +1,1460 @@
+# Copyright (C) 2025 SereniSoft
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: SereniSoft ATUM Enhancer 0.9.20\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/serenisoft-atum-enhancer\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2025-12-17T10:17:13+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: serenisoft-atum-enhancer\n"
+
+#. Plugin Name of the plugin
+#: serenisoft-atum-enhancer.php
+msgid "SereniSoft ATUM Enhancer"
+msgstr ""
+
+#. Plugin URI of the plugin
+#. Author URI of the plugin
+#: serenisoft-atum-enhancer.php
+msgid "https://serenisoft.no/"
+msgstr ""
+
+#. Description of the plugin
+#: serenisoft-atum-enhancer.php
+msgid "Extends ATUM Inventory Management with automatic purchase order suggestions based on stock levels, lead times, seasonal patterns, and supplier closed periods."
+msgstr ""
+
+#. Author of the plugin
+#: serenisoft-atum-enhancer.php
+msgid "SereniSoft"
+msgstr ""
+
+#: classes/Bootstrap.php:138
+msgid "SereniSoft ATUM Enhancer requires WooCommerce to be activated."
+msgstr ""
+
+#: classes/Bootstrap.php:143
+msgid "SereniSoft ATUM Enhancer requires ATUM Inventory Management to be activated."
+msgstr ""
+
+#. translators: %s: minimum WordPress version
+#: classes/Bootstrap.php:151
+#, php-format
+msgid "SereniSoft ATUM Enhancer requires WordPress version %s or greater."
+msgstr ""
+
+#. translators: %s: minimum WooCommerce version
+#: classes/Bootstrap.php:160
+#, php-format
+msgid "SereniSoft ATUM Enhancer requires WooCommerce version %s or greater."
+msgstr ""
+
+#: classes/Bootstrap.php:222
+#: classes/BulkActions/BulkSupplierAssignment.php:231
+#: classes/Products/ProductFields.php:265
+#: classes/PurchaseOrders/POEmailSender.php:582
+#: classes/PurchaseOrders/POListButton.php:535
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1188
+#: classes/Settings/Settings.php:2538
+#: classes/StockCentral/SalesDataColumns.php:329
+#: classes/StockCentral/StockCentralColumns.php:230
+#: classes/SupplierImport/SupplierImport.php:537
+#: classes/Suppliers/SupplierFields.php:391
+msgid "Cloning is not allowed."
+msgstr ""
+
+#: classes/Bootstrap.php:229
+#: classes/BulkActions/BulkSupplierAssignment.php:238
+#: classes/Products/ProductFields.php:272
+#: classes/PurchaseOrders/POEmailSender.php:589
+#: classes/PurchaseOrders/POListButton.php:542
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1195
+#: classes/Settings/Settings.php:2545
+#: classes/StockCentral/SalesDataColumns.php:336
+#: classes/StockCentral/StockCentralColumns.php:237
+#: classes/SupplierImport/SupplierImport.php:544
+#: classes/Suppliers/SupplierFields.php:398
+msgid "Serialization is not allowed."
+msgstr ""
+
+#: classes/BulkActions/BulkSupplierAssignment.php:82
+msgid "Set Supplier"
+msgstr ""
+
+#: classes/BulkActions/BulkSupplierAssignment.php:102
+msgid "Permission denied"
+msgstr ""
+
+#: classes/BulkActions/BulkSupplierAssignment.php:110
+msgid "No products selected"
+msgstr ""
+
+#. translators: %d: product ID
+#: classes/BulkActions/BulkSupplierAssignment.php:128
+#, php-format
+msgid "Product %d not found"
+msgstr ""
+
+#. translators: 1: product ID, 2: error message
+#: classes/BulkActions/BulkSupplierAssignment.php:155
+#, php-format
+msgid "Product %1$d: %2$s"
+msgstr ""
+
+#. translators: %d: number of products
+#: classes/BulkActions/BulkSupplierAssignment.php:162
+#, php-format
+msgid "Supplier assigned to %d product(s)"
+msgstr ""
+
+#: classes/BulkActions/BulkSupplierAssignment.php:171
+msgid "No products updated"
+msgstr ""
+
+#: classes/BulkActions/BulkSupplierAssignment.php:211
+msgid "Select Supplier"
+msgstr ""
+
+#: classes/BulkActions/BulkSupplierAssignment.php:212
+msgid "Assign"
+msgstr ""
+
+#: classes/BulkActions/BulkSupplierAssignment.php:213
+#: classes/PurchaseOrders/POEmailSender.php:129
+#: classes/PurchaseOrders/POListButton.php:80
+#: classes/PurchaseOrders/POListButton.php:101
+#: classes/Settings/Settings.php:525
+#: classes/Settings/Settings.php:636
+#: classes/Settings/Settings.php:679
+#: classes/Settings/Settings.php:700
+msgid "Cancel"
+msgstr ""
+
+#: classes/BulkActions/BulkSupplierAssignment.php:214
+msgid "Search Supplier by Name or ID…"
+msgstr ""
+
+#: classes/BulkActions/BulkSupplierAssignment.php:215
+msgid "Please select a supplier first"
+msgstr ""
+
+#: classes/BulkActions/BulkSupplierAssignment.php:216
+msgid "An error occurred"
+msgstr ""
+
+#: classes/Components/ClosedPeriodsHelper.php:105
+#: classes/Components/ClosedPeriodsHelper.php:123
+msgid "Closed Period"
+msgstr ""
+
+#. translators: %1$s: period name, %2$s: start date, %3$s: end date
+#: classes/Components/ClosedPeriodsHelper.php:249
+#, php-format
+msgid "Delivery would fall during %1$s (%2$s to %3$s)"
+msgstr ""
+
+#: classes/Products/ProductFields.php:78
+#: classes/Products/ProductFields.php:125
+msgid "Minimum Order Qty"
+msgstr ""
+
+#: classes/Products/ProductFields.php:80
+msgid "Minimum quantity that must be ordered from supplier. PO suggestions will round up to this value."
+msgstr ""
+
+#: classes/Products/ProductFields.php:92
+#: classes/Products/ProductFields.php:139
+#: classes/Suppliers/SupplierFields.php:111
+msgid "PO Note"
+msgstr ""
+
+#: classes/Products/ProductFields.php:100
+msgid "Note to include on Purchase Order line for this product..."
+msgstr ""
+
+#: classes/Products/ProductFields.php:101
+msgid "This note will appear on the order line when this product is added to a Purchase Order."
+msgstr ""
+
+#: classes/Products/ProductFields.php:126
+msgid "Minimum quantity that must be ordered from supplier."
+msgstr ""
+
+#: classes/Products/ProductFields.php:140
+msgid "Note to include on Purchase Order line for this variation."
+msgstr ""
+
+#: classes/Products/ProductFields.php:147
+msgid "PO note for this variation..."
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:86
+msgid "Send to Supplier"
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:121
+msgid "Send Purchase Order to Supplier"
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:122
+msgid "This will send the Purchase Order as a PDF attachment to the supplier."
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:126
+msgid "Send Email"
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:139
+msgid "Sending email..."
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:245
+msgid "Recipient:"
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:250
+msgid "Could not get supplier information."
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:276
+msgid "Failed to send email."
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:280
+msgid "An error occurred while sending the email."
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:299
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1017
+#: classes/Settings/Settings.php:843
+#: classes/Settings/Settings.php:884
+#: classes/Settings/Settings.php:1000
+#: classes/Settings/Settings.php:1133
+#: classes/Settings/Settings.php:1238
+msgid "Permission denied."
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:305
+msgid "Invalid Purchase Order."
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:313
+msgid "No supplier assigned to this Purchase Order."
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:321
+msgid "Supplier does not have an email address."
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:332
+msgid "Override Recipient"
+msgstr ""
+
+#. translators: %s: recipient email
+#: classes/PurchaseOrders/POEmailSender.php:349
+#, php-format
+msgid "Purchase Order sent successfully to %s"
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:355
+msgid "Invalid request."
+msgstr ""
+
+#. translators: 1: PO number, 2: supplier name
+#: classes/PurchaseOrders/POEmailSender.php:427
+#, php-format
+msgid "Purchase Order #%1$d - %2$s"
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:469
+msgid "Failed to send email. Please check your server email configuration."
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:536
+msgid "Failed to write PDF file."
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:73
+#: classes/Settings/Settings.php:672
+msgid "Confirm Generation"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:74
+#: classes/Settings/Settings.php:673
+msgid "This will analyze all products and create draft POs for suppliers. Continue?"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:77
+#: classes/Settings/Settings.php:676
+msgid "Yes, Continue"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:89
+#: classes/Settings/Settings.php:688
+msgid "Purchase Order Choices"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:90
+#: classes/Settings/Settings.php:689
+msgid "Some suppliers have existing Purchase Orders. Please choose how to handle each:"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:98
+#: classes/Settings/Settings.php:697
+msgid "Execute Choices"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:113
+#: classes/Settings/Settings.php:710
+msgid "Generating PO Suggestions..."
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:114
+#: classes/Settings/Settings.php:711
+msgid "Please wait, this may take a moment."
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:274
+#: classes/Settings/Settings.php:253
+msgid "Generate PO Suggestions"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:296
+msgid "Generating..."
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:326
+#: classes/Settings/Settings.php:2190
+msgid "An error occurred during generation."
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:341
+#: classes/Settings/Settings.php:2211
+msgid "products need reordering"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:344
+#: classes/Settings/Settings.php:2215
+msgid "Choose action:"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:350
+#: classes/Settings/Settings.php:2226
+msgid "Add to"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:350
+#: classes/Settings/Settings.php:2228
+msgid "products"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:356
+#: classes/Settings/Settings.php:2239
+msgid "Create new Purchase Order"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:370
+#: classes/Settings/Settings.php:2264
+msgid "Choice execution is disabled in Dry Run mode"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:384
+#: classes/Settings/Settings.php:2283
+msgid "DRY RUN - Preview Only"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:386
+msgid "PO suggestions created for suppliers without existing POs."
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:402
+msgid "This is a preview. Disable Dry Run Mode to create actual POs."
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:405
+msgid "Suppliers:"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:405
+#: classes/Settings/Settings.php:2495
+msgid "Products:"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:405
+msgid "Below ROP:"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:408
+msgid "Created:"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:410
+#: classes/PurchaseOrders/POListButton.php:515
+msgid "Refresh Page"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:481
+msgid "AJAX error"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:513
+#: classes/Settings/Settings.php:2470
+msgid "PO Generation Complete"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:514
+#: classes/Settings/Settings.php:2471
+msgid "Total:"
+msgstr ""
+
+#: classes/PurchaseOrders/POListButton.php:514
+msgid "Purchase Orders created"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionAlgorithm.php:754
+msgid "Not enough yearly data (need 2+ years with 6+ months each)"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionAlgorithm.php:789
+msgid "Pattern consistent across years"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionAlgorithm.php:790
+msgid "Pattern varies between years (likely trend, not seasonality)"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:72
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1010
+#: classes/SupplierImport/SupplierImport.php:119
+#: classes/SupplierImport/SupplierImport.php:160
+msgid "Security check failed."
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:77
+msgid "You do not have permission to generate PO suggestions."
+msgstr ""
+
+#. translators: %s: error message
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:125
+#, php-format
+msgid "An error occurred: %s"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:168
+msgid "No suppliers found."
+msgstr ""
+
+#. translators: 1: supplier name, 2: error message
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:309
+#, php-format
+msgid "Supplier %1$s: %2$s"
+msgstr ""
+
+#. translators: 1: created count, 2: created/would be created, 3: skipped count, 4: choices count
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:350
+#, php-format
+msgid "%1$d PO suggestions %2$s, %3$d suppliers skipped, %4$d need your choice."
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:352
+msgid "would be created"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:352
+msgid "created"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:412
+msgid "Failed to create Purchase Order."
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:457
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1126
+msgid "Note"
+msgstr ""
+
+#. translators: 1: number of items, 2: PO ID
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:502
+#, php-format
+msgid "Created new PO #%2$d with %1$d items"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:550
+msgid "N/A"
+msgstr ""
+
+#. translators: 1: items count, 2: supplier name
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:568
+#, php-format
+msgid "DRY RUN: Would create PO with %1$d items for %2$s"
+msgstr ""
+
+#. translators: %d: number of POs created
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:684
+#, php-format
+msgid "[%s] %d Purchase Order Suggestions Created"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:689
+msgid "The following Purchase Order suggestions have been created:"
+msgstr ""
+
+#. translators: 1: supplier name, 2: items count, 3: total, 4: edit URL
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:694
+#, php-format
+msgid "- %1$s: %2$d items, Total: %3$s"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:702
+msgid "Please review these suggestions and update the quantities as needed."
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:743
+msgid "Twice Weekly"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:748
+msgid "Once Weekly"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:753
+msgid "Once Monthly"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1026
+msgid "Cannot execute choices in Dry Run mode. Please disable Dry Run Mode first."
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1040
+msgid "Invalid data."
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1049
+msgid "No PO selected."
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1096
+msgid "Purchase Order not found."
+msgstr ""
+
+#. translators: %d: number of products added
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1148
+#, php-format
+msgid "Added %d products via SereniSoft ATUM Enhancer auto-generation."
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1156
+msgid "Unknown Supplier"
+msgstr ""
+
+#. translators: 1: number of products added, 2: PO ID
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1166
+#, php-format
+msgid "Added %1$d products to existing PO #%2$d"
+msgstr ""
+
+#: classes/Settings/Settings.php:80
+msgid "Enhancer"
+msgstr ""
+
+#: classes/Settings/Settings.php:83
+msgid "PO Suggestions"
+msgstr ""
+
+#: classes/Settings/Settings.php:84
+msgid "Predictive Ordering"
+msgstr ""
+
+#: classes/Settings/Settings.php:85
+#: classes/Suppliers/SupplierFields.php:130
+msgid "Closed Periods"
+msgstr ""
+
+#: classes/Settings/Settings.php:86
+msgid "PO PDF"
+msgstr ""
+
+#: classes/Settings/Settings.php:87
+msgid "PO Email"
+msgstr ""
+
+#: classes/Settings/Settings.php:88
+msgid "Import & Export"
+msgstr ""
+
+#: classes/Settings/Settings.php:111
+msgid "Default Orders Per Year"
+msgstr ""
+
+#: classes/Settings/Settings.php:112
+msgid "Default number of orders per year per supplier. Can be overridden per supplier."
+msgstr ""
+
+#: classes/Settings/Settings.php:125
+msgid "Enable Automatic Suggestions"
+msgstr ""
+
+#: classes/Settings/Settings.php:126
+msgid "Automatically generate purchase order suggestions based on stock levels and sales patterns."
+msgstr ""
+
+#: classes/Settings/Settings.php:134
+msgid "Run Frequency"
+msgstr ""
+
+#: classes/Settings/Settings.php:135
+msgid "How often to automatically generate PO suggestions. Weekly is recommended for most stores."
+msgstr ""
+
+#: classes/Settings/Settings.php:140
+msgid "Daily"
+msgstr ""
+
+#: classes/Settings/Settings.php:141
+msgid "Twice Weekly (Monday & Thursday)"
+msgstr ""
+
+#: classes/Settings/Settings.php:142
+msgid "Weekly"
+msgstr ""
+
+#: classes/Settings/Settings.php:143
+msgid "Monthly"
+msgstr ""
+
+#: classes/Settings/Settings.php:155
+msgid "Run Day"
+msgstr ""
+
+#: classes/Settings/Settings.php:156
+msgid "Which day to run weekly suggestions, or day of month for monthly (1-28)."
+msgstr ""
+
+#: classes/Settings/Settings.php:161
+msgid "Monday (or 1st of month)"
+msgstr ""
+
+#: classes/Settings/Settings.php:162
+msgid "Tuesday (or 2nd of month)"
+msgstr ""
+
+#: classes/Settings/Settings.php:163
+msgid "Wednesday (or 3rd of month)"
+msgstr ""
+
+#: classes/Settings/Settings.php:164
+msgid "Thursday (or 4th of month)"
+msgstr ""
+
+#: classes/Settings/Settings.php:165
+msgid "Friday (or 5th of month)"
+msgstr ""
+
+#: classes/Settings/Settings.php:166
+msgid "Saturday (or 6th of month)"
+msgstr ""
+
+#: classes/Settings/Settings.php:167
+msgid "Sunday (or 7th of month)"
+msgstr ""
+
+#: classes/Settings/Settings.php:179
+msgid "Scheduled Run Time"
+msgstr ""
+
+#: classes/Settings/Settings.php:180
+msgid "Time of day to automatically generate PO suggestions (24h format, server time)."
+msgstr ""
+
+#: classes/Settings/Settings.php:208
+msgid "Notification Email (To)"
+msgstr ""
+
+#: classes/Settings/Settings.php:209
+msgid "Email address to receive notifications when PO suggestions are generated. Leave empty to use WordPress admin email."
+msgstr ""
+
+#: classes/Settings/Settings.php:220
+msgid "Notification Email (CC)"
+msgstr ""
+
+#: classes/Settings/Settings.php:221
+msgid "Optional CC address for PO suggestion notifications. Leave empty for no CC."
+msgstr ""
+
+#: classes/Settings/Settings.php:229
+#: classes/Settings/Settings.php:439
+msgid "From Name"
+msgstr ""
+
+#: classes/Settings/Settings.php:230
+msgid "Name shown as the sender of notification emails. Leave empty to use site name."
+msgstr ""
+
+#: classes/Settings/Settings.php:241
+msgid "From Email"
+msgstr ""
+
+#: classes/Settings/Settings.php:242
+msgid "Email address shown as sender. Leave empty to use WordPress default."
+msgstr ""
+
+#: classes/Settings/Settings.php:254
+msgid "Manually trigger the generation of Purchase Order suggestions."
+msgstr ""
+
+#: classes/Settings/Settings.php:262
+msgid "Enable Dry Run Mode"
+msgstr ""
+
+#: classes/Settings/Settings.php:263
+msgid "When enabled, PO generation will analyze and preview what would be created without actually creating Purchase Orders. Use this to test the algorithm without creating data."
+msgstr ""
+
+#: classes/Settings/Settings.php:271
+msgid "Enable Debug Logging"
+msgstr ""
+
+#: classes/Settings/Settings.php:272
+msgid "Log detailed analysis for each product during PO generation. Check WordPress debug.log for output."
+msgstr ""
+
+#: classes/Settings/Settings.php:280
+msgid "Minimum Days Between Orders"
+msgstr ""
+
+#: classes/Settings/Settings.php:281
+msgid "Minimum number of days that must pass before a new order suggestion is created for the same supplier."
+msgstr ""
+
+#: classes/Settings/Settings.php:294
+msgid "Enable Predictive Ordering"
+msgstr ""
+
+#: classes/Settings/Settings.php:295
+msgid "Consolidates purchase orders by including products that are close to their reorder point or will reach it soon. This reduces the number of POs needed while ensuring products are ordered before stockouts occur.<br><br><strong>Two-Pass System:</strong><br>• <strong>Pass 1:</strong> Identifies suppliers with urgent products (at or below reorder point)<br>• <strong>Pass 2:</strong> For suppliers where products were identified in Pass 1, re-runs analysis including products within safety margin or predicted to reach reorder point within 2× lead time<br><br>This prevents creating premature POs while consolidating orders when they are needed."
+msgstr ""
+
+#: classes/Settings/Settings.php:303
+msgid "Safety Margin (%)"
+msgstr ""
+
+#: classes/Settings/Settings.php:304
+msgid "Include products within this % above their reorder point. Example: With 15% margin and reorder point of 100, products with stock ≤ 115 will be included. Only applies when Predictive Ordering is enabled."
+msgstr ""
+
+#: classes/Settings/Settings.php:317
+msgid "Use Time-Based Prediction"
+msgstr ""
+
+#: classes/Settings/Settings.php:318
+msgid "Include products that will reach their reorder point within 2× the supplier's lead time. Example: If lead time is 60 days and a product will hit reorder point in 90 days, include it now. This provides a safety buffer so orders arrive before stockout. Only applies when Predictive Ordering is enabled."
+msgstr ""
+
+#: classes/Settings/Settings.php:326
+msgid "Include Seasonal Analysis"
+msgstr ""
+
+#: classes/Settings/Settings.php:327
+msgid "Analyze historical sales data to adjust reorder quantities based on seasonal patterns."
+msgstr ""
+
+#: classes/Settings/Settings.php:335
+msgid "Service Level"
+msgstr ""
+
+#: classes/Settings/Settings.php:336
+msgid "How often you want products to be in stock. 95% means you accept being out of stock ~18 days/year. Higher = more safety stock = less stockouts, but more capital tied up in inventory."
+msgstr ""
+
+#: classes/Settings/Settings.php:341
+msgid "90% - Minimal safety stock"
+msgstr ""
+
+#: classes/Settings/Settings.php:342
+msgid "95% - Recommended"
+msgstr ""
+
+#: classes/Settings/Settings.php:343
+msgid "99% - Maximum safety"
+msgstr ""
+
+#: classes/Settings/Settings.php:352
+msgid "Import Suppliers from CSV"
+msgstr ""
+
+#: classes/Settings/Settings.php:353
+msgid "Upload a CSV file with supplier data. Duplicates (by code or name) will be skipped."
+msgstr ""
+
+#: classes/Settings/Settings.php:361
+msgid "Export Suppliers to CSV"
+msgstr ""
+
+#: classes/Settings/Settings.php:362
+msgid "Download all suppliers as a CSV file."
+msgstr ""
+
+#: classes/Settings/Settings.php:370
+#: classes/Settings/Settings.php:593
+msgid "Export Product-Supplier Mapping"
+msgstr ""
+
+#: classes/Settings/Settings.php:371
+msgid "Download the mapping between products (SKU) and suppliers (Code)."
+msgstr ""
+
+#: classes/Settings/Settings.php:379
+msgid "Import Product-Supplier Mapping"
+msgstr ""
+
+#: classes/Settings/Settings.php:380
+msgid "Upload a CSV file to update the supplier assignments for products."
+msgstr ""
+
+#: classes/Settings/Settings.php:389
+msgid "Global Closed Period Presets"
+msgstr ""
+
+#: classes/Settings/Settings.php:390
+msgid "Define reusable closed periods that can be applied to multiple suppliers. Dates use DD-MM format (e.g., 01-07 for July 1st) and automatically handle year boundaries (e.g., 20-12 to 05-01 for Christmas spanning years)."
+msgstr ""
+
+#: classes/Settings/Settings.php:399
+msgid "Buffer Before Closure (Days)"
+msgstr ""
+
+#: classes/Settings/Settings.php:400
+msgid "Safety margin before official closure. Accounts for pre-holiday delivery delays when suppliers rush to clear orders."
+msgstr ""
+
+#: classes/Settings/Settings.php:414
+msgid "Buffer After Closure (Days)"
+msgstr ""
+
+#: classes/Settings/Settings.php:415
+msgid "Factory ramp-up time after reopening. Accounts for post-holiday startup delays before normal production resumes."
+msgstr ""
+
+#: classes/Settings/Settings.php:429
+msgid "Hide Backordered on PDF"
+msgstr ""
+
+#: classes/Settings/Settings.php:430
+msgid "Hide the \"Backordered\" field from Purchase Order PDF exports."
+msgstr ""
+
+#: classes/Settings/Settings.php:440
+msgid "The sender name that appears in the email. Leave empty to use site name."
+msgstr ""
+
+#: classes/Settings/Settings.php:448
+msgid "From Email Address"
+msgstr ""
+
+#: classes/Settings/Settings.php:449
+msgid "The sender email address. This will also be used as Reply-To. Leave empty to use admin email."
+msgstr ""
+
+#: classes/Settings/Settings.php:457
+msgid "CC Email Address"
+msgstr ""
+
+#: classes/Settings/Settings.php:458
+msgid "Admin email address to receive a copy of all PO emails sent to suppliers."
+msgstr ""
+
+#: classes/Settings/Settings.php:466
+msgid "Override Recipient Email"
+msgstr ""
+
+#: classes/Settings/Settings.php:467
+msgid "If set, ALL PO emails will be sent to this address instead of the supplier. Useful for testing. Leave empty to send to suppliers."
+msgstr ""
+
+#: classes/Settings/Settings.php:475
+msgid "Email Body Template"
+msgstr ""
+
+#: classes/Settings/Settings.php:476
+msgid "Default email message. Available placeholders: {po_number}, {supplier_name}, {order_date}, {total}"
+msgstr ""
+
+#: classes/Settings/Settings.php:484
+msgid "Email Signature"
+msgstr ""
+
+#: classes/Settings/Settings.php:485
+msgid "Signature to appear at the bottom of the email."
+msgstr ""
+
+#: classes/Settings/Settings.php:507
+msgid "CSV format: Comma-separated with columns including: Leverandørnummer, Navn, Organisasjonsnummer, Telefonnummer, Faksnummer, E-postadresse, Postadresse, Postnr., Sted, Land"
+msgstr ""
+
+#: classes/Settings/Settings.php:513
+#: classes/Settings/Settings.php:624
+msgid "Preview"
+msgstr ""
+
+#: classes/Settings/Settings.php:522
+#: classes/Settings/Settings.php:633
+msgid "Import"
+msgstr ""
+
+#: classes/Settings/Settings.php:558
+msgid "Export all suppliers to a CSV file. The file will include: Code, Name, Tax Number, Phone, Fax, Email, Address, City, Zip Code, Country, Lead Time, and more."
+msgstr ""
+
+#: classes/Settings/Settings.php:563
+msgid "Export Suppliers"
+msgstr ""
+
+#: classes/Settings/Settings.php:588
+msgid "Export all products with their supplier assignments. Columns: Product SKU, Product Name, Supplier Code, Supplier Name, Supplier SKU."
+msgstr ""
+
+#: classes/Settings/Settings.php:618
+msgid "Upload a CSV file to update supplier assignments for products. Required columns: Product SKU, Supplier Code. Optional: Supplier SKU."
+msgstr ""
+
+#: classes/Settings/Settings.php:661
+msgid "Generate PO Suggestions Now"
+msgstr ""
+
+#: classes/Settings/Settings.php:741
+msgid "Examples: Summer vacation (01-07 to 15-08), Christmas (20-12 to 05-01). Year-crossing periods are handled automatically."
+msgstr ""
+
+#: classes/Settings/Settings.php:747
+msgid "Period Name"
+msgstr ""
+
+#: classes/Settings/Settings.php:748
+#: classes/Suppliers/SupplierFields.php:165
+msgid "Start (DD-MM)"
+msgstr ""
+
+#: classes/Settings/Settings.php:749
+#: classes/Suppliers/SupplierFields.php:166
+msgid "End (DD-MM)"
+msgstr ""
+
+#: classes/Settings/Settings.php:750
+msgid "Actions"
+msgstr ""
+
+#: classes/Settings/Settings.php:757
+msgid "+ Add Period"
+msgstr ""
+
+#: classes/Settings/Settings.php:850
+msgid "Invalid data format."
+msgstr ""
+
+#: classes/Settings/Settings.php:870
+msgid "Closed periods saved."
+msgstr ""
+
+#: classes/Settings/Settings.php:897
+msgid "No suppliers found to export."
+msgstr ""
+
+#: classes/Settings/Settings.php:902
+#: classes/Settings/Settings.php:1709
+msgid "Code"
+msgstr ""
+
+#: classes/Settings/Settings.php:903
+#: classes/Settings/Settings.php:1710
+#: classes/Suppliers/SupplierFields.php:164
+msgid "Name"
+msgstr ""
+
+#: classes/Settings/Settings.php:904
+msgid "Tax Number"
+msgstr ""
+
+#: classes/Settings/Settings.php:905
+msgid "Phone"
+msgstr ""
+
+#: classes/Settings/Settings.php:906
+msgid "Fax"
+msgstr ""
+
+#: classes/Settings/Settings.php:907
+msgid "General Email"
+msgstr ""
+
+#: classes/Settings/Settings.php:908
+msgid "Ordering Email"
+msgstr ""
+
+#: classes/Settings/Settings.php:909
+msgid "Website"
+msgstr ""
+
+#: classes/Settings/Settings.php:910
+msgid "Ordering URL"
+msgstr ""
+
+#: classes/Settings/Settings.php:911
+msgid "Address"
+msgstr ""
+
+#: classes/Settings/Settings.php:912
+msgid "Address 2"
+msgstr ""
+
+#: classes/Settings/Settings.php:913
+msgid "City"
+msgstr ""
+
+#: classes/Settings/Settings.php:914
+msgid "State"
+msgstr ""
+
+#: classes/Settings/Settings.php:915
+msgid "Zip Code"
+msgstr ""
+
+#: classes/Settings/Settings.php:916
+msgid "Country"
+msgstr ""
+
+#: classes/Settings/Settings.php:917
+msgid "Currency"
+msgstr ""
+
+#: classes/Settings/Settings.php:918
+msgid "Lead Time (days)"
+msgstr ""
+
+#: classes/Settings/Settings.php:919
+msgid "Discount (%)"
+msgstr ""
+
+#: classes/Settings/Settings.php:920
+msgid "Tax Rate (%)"
+msgstr ""
+
+#: classes/Settings/Settings.php:921
+msgid "Location"
+msgstr ""
+
+#: classes/Settings/Settings.php:922
+msgid "Description"
+msgstr ""
+
+#: classes/Settings/Settings.php:961
+#: classes/Settings/Settings.php:1094
+msgid "Could not create export file."
+msgstr ""
+
+#. translators: %d: number of suppliers exported
+#: classes/Settings/Settings.php:980
+#, php-format
+msgid "Exported %d suppliers successfully."
+msgstr ""
+
+#: classes/Settings/Settings.php:1010
+msgid "ATUM product data table not found."
+msgstr ""
+
+#: classes/Settings/Settings.php:1030
+msgid "No products found."
+msgstr ""
+
+#. translators: %d: number of products exported
+#: classes/Settings/Settings.php:1113
+#, php-format
+msgid "Exported %d products successfully."
+msgstr ""
+
+#: classes/Settings/Settings.php:1137
+#: classes/Settings/Settings.php:1242
+#: classes/SupplierImport/SupplierImport.php:129
+#: classes/SupplierImport/SupplierImport.php:170
+msgid "No file uploaded."
+msgstr ""
+
+#: classes/Settings/Settings.php:1144
+#: classes/Settings/Settings.php:1249
+#: classes/SupplierImport/SupplierImport.php:205
+#: classes/SupplierImport/SupplierImport.php:281
+msgid "Could not read the CSV file."
+msgstr ""
+
+#: classes/Settings/Settings.php:1151
+#: classes/Settings/Settings.php:1256
+#: classes/SupplierImport/SupplierImport.php:212
+#: classes/SupplierImport/SupplierImport.php:288
+msgid "Invalid CSV file format."
+msgstr ""
+
+#: classes/Settings/Settings.php:1164
+msgid "Required column \"Product SKU\" not found in CSV."
+msgstr ""
+
+#: classes/Settings/Settings.php:1169
+msgid "Required column \"Supplier Code\" not found in CSV."
+msgstr ""
+
+#: classes/Settings/Settings.php:1196
+msgid "Product not found"
+msgstr ""
+
+#: classes/Settings/Settings.php:1199
+msgid "Supplier not found"
+msgstr ""
+
+#: classes/Settings/Settings.php:1269
+msgid "Required columns not found in CSV."
+msgstr ""
+
+#. translators: 1: product SKU, 2: error message
+#: classes/Settings/Settings.php:1325
+#, php-format
+msgid "Error updating %1$s: %2$s"
+msgstr ""
+
+#. translators: 1: updated count, 2: skipped count
+#: classes/Settings/Settings.php:1341
+#, php-format
+msgid "Import complete. %1$d products updated, %2$d skipped."
+msgstr ""
+
+#: classes/Settings/Settings.php:1672
+#: classes/Settings/Settings.php:1888
+msgid "Please select a CSV file."
+msgstr ""
+
+#: classes/Settings/Settings.php:1704
+#: classes/Settings/Settings.php:1920
+msgid "Preview:"
+msgstr ""
+
+#: classes/Settings/Settings.php:1705
+msgid "will be imported"
+msgstr ""
+
+#: classes/Settings/Settings.php:1706
+#: classes/Settings/Settings.php:1922
+msgid "will be skipped"
+msgstr ""
+
+#: classes/Settings/Settings.php:1711
+#: classes/Settings/Settings.php:1927
+msgid "Status"
+msgstr ""
+
+#: classes/Settings/Settings.php:1716
+msgid "Will import"
+msgstr ""
+
+#: classes/Settings/Settings.php:1735
+#: classes/Settings/Settings.php:1953
+msgid "An error occurred during preview."
+msgstr ""
+
+#: classes/Settings/Settings.php:1751
+msgid "Please preview the file first."
+msgstr ""
+
+#: classes/Settings/Settings.php:1765
+msgid "Importing..."
+msgstr ""
+
+#: classes/Settings/Settings.php:1785
+#: classes/Settings/Settings.php:2002
+#: classes/Settings/Settings.php:2363
+msgid "Errors:"
+msgstr ""
+
+#: classes/Settings/Settings.php:1794
+#: classes/Settings/Settings.php:2011
+msgid "An error occurred during import."
+msgstr ""
+
+#: classes/Settings/Settings.php:1824
+#: classes/Settings/Settings.php:1865
+msgid "Download CSV"
+msgstr ""
+
+#: classes/Settings/Settings.php:1835
+#: classes/Settings/Settings.php:1876
+msgid "An error occurred during export."
+msgstr ""
+
+#: classes/Settings/Settings.php:1921
+msgid "will be updated"
+msgstr ""
+
+#: classes/Settings/Settings.php:1925
+msgid "Product SKU"
+msgstr ""
+
+#: classes/Settings/Settings.php:1926
+msgid "Supplier Code"
+msgstr ""
+
+#: classes/Settings/Settings.php:1932
+msgid "Will update"
+msgstr ""
+
+#: classes/Settings/Settings.php:1969
+msgid "No file selected."
+msgstr ""
+
+#: classes/Settings/Settings.php:2040
+msgid "Saving..."
+msgstr ""
+
+#: classes/Settings/Settings.php:2048
+msgid "Saved"
+msgstr ""
+
+#: classes/Settings/Settings.php:2051
+#: classes/Settings/Settings.php:2054
+msgid "Error saving"
+msgstr ""
+
+#: classes/Settings/Settings.php:2068
+msgid "e.g., Summer Vacation"
+msgstr ""
+
+#: classes/Settings/Settings.php:2071
+#: classes/Suppliers/SupplierFields.php:167
+#: classes/Suppliers/SupplierFields.php:200
+msgid "Remove"
+msgstr ""
+
+#: classes/Settings/Settings.php:2076
+msgid "No periods defined. Click \"+ Add Period\" to create one."
+msgstr ""
+
+#: classes/Settings/Settings.php:2265
+msgid "This is a preview only. Disable Dry Run Mode to execute choices and modify Purchase Orders."
+msgstr ""
+
+#: classes/Settings/Settings.php:2284
+msgid "PO suggestions would be created for suppliers without existing POs."
+msgstr ""
+
+#: classes/Settings/Settings.php:2286
+msgid "ℹ️ No Purchase Orders were created. This is a preview. Disable Dry Run Mode to create actual POs."
+msgstr ""
+
+#: classes/Settings/Settings.php:2289
+msgid "Auto-created"
+msgstr ""
+
+#: classes/Settings/Settings.php:2289
+msgid "Purchase Orders for suppliers without existing POs."
+msgstr ""
+
+#: classes/Settings/Settings.php:2309
+msgid "ℹ️ No Purchase Orders were created. This is a preview of what would be generated. Disable Dry Run Mode to create actual POs."
+msgstr ""
+
+#: classes/Settings/Settings.php:2314
+msgid "Analysis Summary:"
+msgstr ""
+
+#: classes/Settings/Settings.php:2316
+msgid "Total suppliers analyzed:"
+msgstr ""
+
+#: classes/Settings/Settings.php:2317
+msgid "Total products analyzed:"
+msgstr ""
+
+#: classes/Settings/Settings.php:2318
+msgid "Products below reorder point:"
+msgstr ""
+
+#: classes/Settings/Settings.php:2324
+msgid "Preview - Would Create:"
+msgstr ""
+
+#: classes/Settings/Settings.php:2326
+msgid "Purchase Orders Created:"
+msgstr ""
+
+#: classes/Settings/Settings.php:2331
+#: classes/Settings/Settings.php:2333
+#: classes/Settings/Settings.php:2471
+msgid "items"
+msgstr ""
+
+#: classes/Settings/Settings.php:2344
+msgid "Products Without Supplier:"
+msgstr ""
+
+#: classes/Settings/Settings.php:2345
+msgid "products found"
+msgstr ""
+
+#: classes/Settings/Settings.php:2352
+msgid "Stock:"
+msgstr ""
+
+#: classes/Settings/Settings.php:2427
+msgid "AJAX error for supplier"
+msgstr ""
+
+#: classes/Settings/Settings.php:2471
+msgid "Purchase Orders created with"
+msgstr ""
+
+#: classes/Settings/Settings.php:2476
+msgid "POs auto-created for suppliers without existing orders"
+msgstr ""
+
+#: classes/Settings/Settings.php:2477
+msgid "PO(s) created from choice execution"
+msgstr ""
+
+#: classes/Settings/Settings.php:2482
+msgid "Results:"
+msgstr ""
+
+#: classes/Settings/Settings.php:2490
+msgid "Supplier:"
+msgstr ""
+
+#: classes/Settings/Settings.php:2501
+msgid "SKU:"
+msgstr ""
+
+#: classes/Settings/Settings.php:2503
+msgid "Qty:"
+msgstr ""
+
+#: classes/Settings/Settings.php:2518
+msgid "Some choices failed to execute. Check logs for details."
+msgstr ""
+
+#: classes/StockCentral/SalesDataColumns.php:95
+msgid "Sold (Year)"
+msgstr ""
+
+#: classes/StockCentral/SalesDataColumns.php:96
+msgid "Sold (Period)"
+msgstr ""
+
+#: classes/StockCentral/StockCentralColumns.php:91
+msgid "MOQ"
+msgstr ""
+
+#: classes/SupplierImport/SupplierImport.php:124
+#: classes/SupplierImport/SupplierImport.php:165
+msgid "You do not have permission to import suppliers."
+msgstr ""
+
+#: classes/SupplierImport/SupplierImport.php:137
+#: classes/SupplierImport/SupplierImport.php:178
+msgid "Invalid file type. Please upload a CSV file."
+msgstr ""
+
+#. translators: 1: row number, 2: error message
+#: classes/SupplierImport/SupplierImport.php:242
+#, php-format
+msgid "Row %1$d: %2$s"
+msgstr ""
+
+#. translators: 1: imported count, 2: skipped count
+#: classes/SupplierImport/SupplierImport.php:260
+#, php-format
+msgid "Import complete. %1$d suppliers imported, %2$d skipped (duplicates)."
+msgstr ""
+
+#: classes/SupplierImport/SupplierImport.php:360
+msgid "Missing name"
+msgstr ""
+
+#: classes/SupplierImport/SupplierImport.php:363
+msgid "Duplicate"
+msgstr ""
+
+#: classes/SupplierImport/SupplierImport.php:420
+msgid "Supplier name is required."
+msgstr ""
+
+#: classes/SupplierImport/SupplierImport.php:430
+msgid "Supplier already exists."
+msgstr ""
+
+#: classes/Suppliers/SupplierFields.php:66
+msgid "Enhancer Settings"
+msgstr ""
+
+#: classes/Suppliers/SupplierFields.php:92
+msgid "Override default settings from ATUM Enhancer for this supplier."
+msgstr ""
+
+#: classes/Suppliers/SupplierFields.php:96
+msgid "Orders Per Year"
+msgstr ""
+
+#: classes/Suppliers/SupplierFields.php:104
+msgid "Use default"
+msgstr ""
+
+#: classes/Suppliers/SupplierFields.php:106
+msgid "How many times per year to order from this supplier. Leave empty to use the global default."
+msgstr ""
+
+#: classes/Suppliers/SupplierFields.php:117
+msgid "Note to include at the top of Purchase Orders for this supplier..."
+msgstr ""
+
+#: classes/Suppliers/SupplierFields.php:119
+msgid "This note will appear at the top of all Purchase Orders generated for this supplier."
+msgstr ""
+
+#: classes/Suppliers/SupplierFields.php:132
+msgid "Select when this supplier is closed (vacations, holidays, etc.). The system will automatically adjust ordering to prevent stockouts during closures."
+msgstr ""
+
+#: classes/Suppliers/SupplierFields.php:137
+msgid "Global Presets:"
+msgstr ""
+
+#: classes/Suppliers/SupplierFields.php:152
+#, php-format
+msgid "No global presets defined. You can %s or add custom periods below."
+msgstr ""
+
+#: classes/Suppliers/SupplierFields.php:153
+msgid "create global presets in settings"
+msgstr ""
+
+#: classes/Suppliers/SupplierFields.php:160
+msgid "Custom Periods (supplier-specific):"
+msgstr ""
+
+#: classes/Suppliers/SupplierFields.php:173
+msgid "+ Add Custom Period"
+msgstr ""
+
+#: classes/Suppliers/SupplierFields.php:197
+msgid "e.g., Factory Maintenance"
+msgstr ""
+
+#: classes/Suppliers/SupplierFields.php:205
+msgid "No custom periods. Click \"+ Add Custom Period\" to create one."
+msgstr ""
+
+#. translators: %s: minimum PHP version
+#: serenisoft-atum-enhancer.php:75
+#, php-format
+msgid "SereniSoft ATUM Enhancer requires PHP version %s or greater. Please update or contact your hosting provider."
+msgstr ""

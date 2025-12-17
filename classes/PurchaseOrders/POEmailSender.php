@@ -321,11 +321,17 @@ class POEmailSender {
 			wp_send_json_error( array( 'message' => __( 'Supplier does not have an email address.', 'serenisoft-atum-enhancer' ) ) );
 		}
 
+		// Check for override recipient.
+		$override_email = Settings::get( 'sae_email_override_recipient', '' );
+		$actual_email   = ! empty( $override_email ) && is_email( $override_email ) ? $override_email : $supplier_email;
+		$is_override    = $actual_email !== $supplier_email;
+
 		// If just getting info, return it.
 		if ( isset( $_POST['get_info'] ) && $_POST['get_info'] ) {
 			wp_send_json_success( array(
-				'supplier_name'  => $supplier_name,
-				'supplier_email' => $supplier_email,
+				'supplier_name'  => $is_override ? __( 'Override Recipient', 'serenisoft-atum-enhancer' ) : $supplier_name,
+				'supplier_email' => $actual_email,
+				'is_override'    => $is_override,
 			) );
 		}
 
@@ -339,9 +345,9 @@ class POEmailSender {
 
 			wp_send_json_success( array(
 				'message' => sprintf(
-					/* translators: %s: supplier email */
+					/* translators: %s: recipient email */
 					__( 'Purchase Order sent successfully to %s', 'serenisoft-atum-enhancer' ),
-					$supplier_email
+					$actual_email
 				),
 			) );
 		}
@@ -368,7 +374,14 @@ class POEmailSender {
 			$supplier_email = $supplier->ordering_email ?: $supplier->general_email;
 		$supplier_name  = $supplier->name;
 
+		// Check for override recipient.
+		$override_email  = Settings::get( 'sae_email_override_recipient', '' );
+		$recipient_email = ! empty( $override_email ) && is_email( $override_email ) ? $override_email : $supplier_email;
+
 		error_log( 'SAE Email: Supplier: ' . $supplier_name . ' <' . $supplier_email . '>' );
+		if ( $recipient_email !== $supplier_email ) {
+			error_log( 'SAE Email: OVERRIDE active - sending to: ' . $recipient_email );
+		}
 
 		// Get email settings.
 		error_log( 'SAE Email: Getting email settings...' );
@@ -438,11 +451,11 @@ class POEmailSender {
 
 		error_log( 'SAE Email: PDF generated at: ' . $pdf_path );
 		error_log( 'SAE Email: PDF file exists: ' . ( file_exists( $pdf_path ) ? 'yes' : 'no' ) );
-		error_log( 'SAE Email: Sending to: ' . $supplier_email );
+		error_log( 'SAE Email: Sending to: ' . $recipient_email );
 		error_log( 'SAE Email: Subject: ' . $subject );
 
 		// Send email.
-		$sent = wp_mail( $supplier_email, $subject, $body, $headers, array( $pdf_path ) );
+		$sent = wp_mail( $recipient_email, $subject, $body, $headers, array( $pdf_path ) );
 
 		error_log( 'SAE Email: wp_mail returned: ' . ( $sent ? 'true' : 'false' ) );
 

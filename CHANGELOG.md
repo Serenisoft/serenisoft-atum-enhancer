@@ -2,6 +2,15 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.20] - 2025-12-17
+
+### Added
+- **Email Override Recipient**: New setting to redirect all PO emails to a test/admin address
+  - Found in ATUM Settings → Enhancer → PO Email Settings
+  - When set, all PO emails go to this address instead of supplier email
+  - Useful for testing email functionality without sending to actual suppliers
+  - Leave empty to send emails to suppliers as normal
+
 ## [0.9.19] - 2025-12-17
 
 ### Added

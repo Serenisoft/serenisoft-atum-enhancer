@@ -460,6 +460,15 @@ class Settings {
 			'default' => '',
 		);
 
+		$defaults['sae_email_override_recipient'] = array(
+			'group'   => self::TAB_KEY,
+			'section' => 'sae_po_email',
+			'name'    => __( 'Override Recipient Email', 'serenisoft-atum-enhancer' ),
+			'desc'    => __( 'If set, ALL PO emails will be sent to this address instead of the supplier. Useful for testing. Leave empty to send to suppliers.', 'serenisoft-atum-enhancer' ),
+			'type'    => 'text',
+			'default' => '',
+		);
+
 		$defaults['sae_email_body_template'] = array(
 			'group'   => self::TAB_KEY,
 			'section' => 'sae_po_email',
