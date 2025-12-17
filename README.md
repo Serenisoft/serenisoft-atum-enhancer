@@ -90,7 +90,7 @@ All parameters that affect the ordering calculation:
 | Include Seasonal Analysis | Yes | Adjusts for monthly sales patterns (only for products with 365+ days history) |
 | Enable Predictive Ordering | Yes | Two-pass system that orders proactively before stockouts |
 | Safety Margin (%) | 15% | Include products within this % above reorder point (Pass 2) |
-| Time-Based Prediction | Yes | Include products reaching ROP within 2× base lead time (Pass 2) |
+| Time-Based Prediction | Yes | Include products reaching ROP within predictive window (2× base lead time + closed days) |
 
 ### Notification Settings (ATUM Settings → Enhancer)
 
@@ -152,7 +152,12 @@ The plugin uses a two-pass analysis system to determine which products need reor
 
 **Additional checks (in addition to Pass 1):**
 1. **Safety Margin Check** - Are we within 15% above ROP?
-2. **Time-Based Check** - Will we reach ROP within 2× lead time?
+2. **Time-Based Check** - Will we reach ROP within the predictive window?
+
+**Predictive Window Calculation:**
+- Base: 2 × base lead time (before closed period adjustment)
+- Plus: Any closed days that fall within the window
+- Example: Base lead time 49 days → 2 × 49 = 98 days + 40 closed days = 138 days
 
 Pass 2 orders MORE PROACTIVELY - before you actually hit the reorder point.
 
