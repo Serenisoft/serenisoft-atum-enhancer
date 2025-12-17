@@ -2,6 +2,28 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.17] - 2025-12-17
+
+### Fixed
+- **Pass 2 Lead Time Double-Counting**: Fixed bug where predictive ordering (Pass 2) incorrectly used adjusted lead time instead of base lead time
+  - Pass 2 time-based check now uses `2 × base_lead_time` instead of `2 × adjusted_lead_time`
+  - Prevents products from being incorrectly included when closed periods extended lead time
+  - Example: With base 49 days and adjusted 89 days (closed period), Pass 2 now checks 98 days instead of 178 days
+  - New `get_predictive_window()` function calculates correct window with closed period awareness
+
+- **Seasonal Analysis for New Products**: Skip seasonal analysis for products with less than 365 days of sales history
+  - New products are no longer penalized by missing historical months
+  - Prevents incorrect seasonal factors (e.g., halving sales rate because Jan-Mar had no sales for a product launched in November)
+  - Industry best practice requires 12+ months of data for reliable seasonal patterns
+  - Debug logging shows when seasonal analysis is skipped and why
+
+### Technical Details
+- Separated `base_lead_time` and `adjusted_lead_time` variables in `get_products_needing_reorder()`
+- `analyze_product()` now receives both lead time values
+- New `get_predictive_window($supplier_id, $base_lead_time)` in POSuggestionAlgorithm
+- New `count_closed_days_in_range()` in ClosedPeriodsHelper
+- Seasonal analysis checks `$days_of_history >= 365` before applying adjustments
+
 ## [0.9.16] - 2025-12-16
 
 ### Added

@@ -60,11 +60,14 @@ class POSuggestionAlgorithm {
 
 		// Get supplier lead time (default 14 days if not set).
 		// Use Supplier object to get lead_time (correct way to use ATUM)
-		$supplier  = new \Atum\Suppliers\Supplier( $supplier_id );
-		$lead_time = $supplier->lead_time;
-		if ( empty( $lead_time ) || $lead_time < 1 ) {
-			$lead_time = 14;
+		$supplier       = new \Atum\Suppliers\Supplier( $supplier_id );
+		$base_lead_time = $supplier->lead_time;
+		if ( empty( $base_lead_time ) || $base_lead_time < 1 ) {
+			$base_lead_time = 14;
 		}
+
+		// Keep adjusted lead time separate from base (for Pass 2 calculations).
+		$adjusted_lead_time = $base_lead_time;
 
 		// CLOSED PERIODS - TYPE A: Adjust lead time if delivery falls in closed period.
 		// Log closed periods configuration for this supplier.
@@ -103,17 +106,16 @@ class POSuggestionAlgorithm {
 			}
 		}
 
-		$lead_time_adjustment = ClosedPeriodsHelper::get_adjusted_lead_time( $supplier_id, $lead_time );
-		if ( $lead_time_adjustment['adjusted_lead_time'] > $lead_time ) {
-			$original_lead_time = $lead_time;
-			$lead_time = $lead_time_adjustment['adjusted_lead_time'];
+		$lead_time_adjustment = ClosedPeriodsHelper::get_adjusted_lead_time( $supplier_id, $base_lead_time );
+		if ( $lead_time_adjustment['adjusted_lead_time'] > $base_lead_time ) {
+			$adjusted_lead_time = $lead_time_adjustment['adjusted_lead_time'];
 
 			if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
 				error_log( sprintf(
 					'SAE DEBUG: [Closed Period - Type A] Supplier #%d | Lead time: %d → %d days | Reason: %s',
 					$supplier_id,
-					$original_lead_time,
-					$lead_time,
+					$base_lead_time,
+					$adjusted_lead_time,
 					$lead_time_adjustment['reason']
 				) );
 			}
@@ -126,7 +128,7 @@ class POSuggestionAlgorithm {
 				continue;
 			}
 
-			$analysis = self::analyze_product( $product, $days_of_stock_target, $lead_time, $service_level, $use_seasonal, $use_predictive, $supplier_id );
+			$analysis = self::analyze_product( $product, $days_of_stock_target, $base_lead_time, $adjusted_lead_time, $service_level, $use_seasonal, $use_predictive, $supplier_id );
 
 			if ( $analysis['needs_reorder'] ) {
 				$products_to_reorder[] = $analysis;
@@ -147,7 +149,8 @@ class POSuggestionAlgorithm {
 	 *
 	 * @param \WC_Product $product              Product object.
 	 * @param int         $days_of_stock_target Target days of stock to maintain.
-	 * @param int         $lead_time            Supplier lead time in days.
+	 * @param int         $base_lead_time       Base supplier lead time in days (without closed period adjustment).
+	 * @param int         $adjusted_lead_time   Lead time adjusted for closed periods (used for ROP calculation).
 	 * @param int         $service_level        Service level percentage (90, 95, 99).
 	 * @param bool        $use_seasonal         Whether to use seasonal analysis.
 	 * @param bool        $use_predictive       Whether to use predictive ordering logic.
@@ -155,7 +158,7 @@ class POSuggestionAlgorithm {
 	 *
 	 * @return array Product analysis data.
 	 */
-	public static function analyze_product( $product, $days_of_stock_target, $lead_time, $service_level, $use_seasonal, $use_predictive = false, $supplier_id = 0 ) {
+	public static function analyze_product( $product, $days_of_stock_target, $base_lead_time, $adjusted_lead_time, $service_level, $use_seasonal, $use_predictive = false, $supplier_id = 0 ) {
 
 		$product_id    = $product->get_id();
 		$current_stock = (int) $product->get_stock_quantity();
@@ -169,14 +172,15 @@ class POSuggestionAlgorithm {
 		// Effective stock = what we have + what's coming.
 		$effective_stock = $current_stock + $inbound_stock;
 
-		// Get average daily sales.
-		$avg_daily_sales = self::get_average_daily_sales( $product_id, $use_seasonal, $lead_time, $days_of_stock_target );
+		// Get average daily sales (use adjusted lead time for seasonal calculations).
+		$avg_daily_sales = self::get_average_daily_sales( $product_id, $use_seasonal, $adjusted_lead_time, $days_of_stock_target );
 
-		// Calculate safety stock using statistical formula.
-		$safety_stock = self::calculate_safety_stock( $product_id, $lead_time, $service_level );
+		// Calculate safety stock using statistical formula (use adjusted lead time).
+		$safety_stock = self::calculate_safety_stock( $product_id, $adjusted_lead_time, $service_level );
 
 		// Calculate reorder point: (Avg Daily Sales × Lead Time) + Safety Stock.
-		$reorder_point = ceil( ( $avg_daily_sales * $lead_time ) + $safety_stock );
+		// Use adjusted_lead_time to account for closed periods in Pass 1.
+		$reorder_point = ceil( ( $avg_daily_sales * $adjusted_lead_time ) + $safety_stock );
 
 		// Calculate optimal stock level (for full order cycle).
 		$optimal_stock = ceil( $avg_daily_sales * $days_of_stock_target ) + $safety_stock;
@@ -192,7 +196,7 @@ class POSuggestionAlgorithm {
 			$supplier_id,
 			$effective_stock,
 			$avg_daily_sales,
-			$lead_time
+			$adjusted_lead_time
 		);
 
 		$needs_closure_order = false;
@@ -229,13 +233,13 @@ class POSuggestionAlgorithm {
 				$sku,
 				$product->get_name(),
 				$avg_daily_sales,
-				$lead_time,
+				$adjusted_lead_time,
 				$safety_stock,
 				$reorder_point
 			) );
 
 			// Log order quantity calculation (accounts for lead time consumption)
-			$preview_stock_at_arrival = $effective_stock - ( $avg_daily_sales * $lead_time );
+			$preview_stock_at_arrival = $effective_stock - ( $avg_daily_sales * $adjusted_lead_time );
 			$preview_qty              = max( 1, ceil( $optimal_stock - $preview_stock_at_arrival ) );
 			error_log( sprintf(
 				'SAE DEBUG: [Pass 1] [%s] %s | Order Calc: %d optimal - %.1f stock@arrival (%.1f consumed in %dd) = %d suggested',
@@ -243,8 +247,8 @@ class POSuggestionAlgorithm {
 				$product->get_name(),
 				$optimal_stock,
 				$preview_stock_at_arrival,
-				$avg_daily_sales * $lead_time,
-				$lead_time,
+				$avg_daily_sales * $adjusted_lead_time,
+				$adjusted_lead_time,
 				$preview_qty
 			) );
 
@@ -263,6 +267,7 @@ class POSuggestionAlgorithm {
 		$within_safety_margin = false;
 		$will_reach_rop_soon = false;
 		$safety_margin_threshold = $reorder_point; // Default to reorder point
+		$predictive_window = 0; // For debug logging
 
 		if ( $use_predictive ) {
 			// Get settings
@@ -273,11 +278,16 @@ class POSuggestionAlgorithm {
 			$safety_margin_threshold = $reorder_point * ( 1 + ( $safety_margin_percent / 100 ) );
 			$within_safety_margin = $effective_stock <= $safety_margin_threshold;
 
-			// Calculate if will reach ROP within 2× lead time (if time-based is enabled)
-			// Using 2× lead time provides buffer - order arrives when stock still has 1× lead time left
+			// Calculate if will reach ROP within predictive window (if time-based is enabled)
+			// IMPORTANT: Use base_lead_time for predictive window calculation, not adjusted_lead_time.
+			// This prevents double-counting closed periods (which are already in adjusted_lead_time for Pass 1).
 			if ( $use_time_based && $avg_daily_sales > 0 ) {
 				$days_until_rop = ( $effective_stock - $reorder_point ) / $avg_daily_sales;
-				$will_reach_rop_soon = $days_until_rop <= ( 2 * $lead_time );
+
+				// Calculate predictive window: 2 × base_lead_time, plus any closed days in that window
+				$predictive_window = self::get_predictive_window( $supplier_id, $base_lead_time );
+
+				$will_reach_rop_soon = $days_until_rop <= $predictive_window;
 			}
 		}
 
@@ -287,7 +297,7 @@ class POSuggestionAlgorithm {
 		// Calculate suggested quantity to bring stock up to optimal level.
 		// Account for stock consumed during lead time - we need optimal stock WHEN ORDER ARRIVES.
 		if ( $needs_reorder ) {
-			$stock_at_arrival = $effective_stock - ( $avg_daily_sales * $lead_time );
+			$stock_at_arrival = $effective_stock - ( $avg_daily_sales * $adjusted_lead_time );
 			$base_qty         = max( 1, ceil( $optimal_stock - $stock_at_arrival ) );
 
 			// Add extra quantity for closed period buffer
@@ -344,12 +354,14 @@ class POSuggestionAlgorithm {
 				: 'SKIP (predictive not triggered)';
 
 			error_log( sprintf(
-				'SAE DEBUG: [Pass 2] [%s] %s | Stock: %d | Safety Threshold: %d | Days to ROP: %.1f | Suggested Qty: %d | %s',
+				'SAE DEBUG: [Pass 2] [%s] %s | Stock: %d | Safety Threshold: %d | Days to ROP: %.1f | Predictive Window: %d (2×%d base) | Suggested Qty: %d | %s',
 				$sku,
 				$product->get_name(),
 				$effective_stock,
 				(int) $safety_margin_threshold,
 				$days_until_rop,
+				$predictive_window,
+				$base_lead_time,
 				$suggested_qty,
 				$reason_text
 			) );
@@ -470,8 +482,18 @@ class POSuggestionAlgorithm {
 		// Apply trend adjustment for growing/declining sales.
 		$avg_daily = self::apply_trend_adjustment( $product_id, $avg_daily, $days_of_history );
 
-		if ( $use_seasonal ) {
+		// Only apply seasonal adjustment if product has at least 365 days of sales history.
+		// New products need a full year of data before seasonal patterns can be reliably identified.
+		if ( $use_seasonal && $days_of_history >= 365 ) {
 			$avg_daily = self::apply_seasonal_adjustment( $product_id, $avg_daily, $lead_time, $days_of_stock_target );
+		} elseif ( $use_seasonal && 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
+			$product = wc_get_product( $product_id );
+			$sku = $product ? ( $product->get_sku() ?: 'N/A' ) : 'N/A';
+			error_log( sprintf(
+				'SAE DEBUG: [Seasonal] [%s] SKIPPED - Only %d days of history (need 365 for seasonal analysis)',
+				$sku,
+				$days_of_history
+			) );
 		}
 
 		// Cap combined adjustment to prevent extreme values (0.4x to 10x).
@@ -604,6 +626,34 @@ class POSuggestionAlgorithm {
 
 		return (int) ceil( $safety_stock );
 
+	}
+
+	/**
+	 * Calculate predictive window for Pass 2
+	 *
+	 * Uses 2 × base_lead_time, adjusted for any closed periods within that window.
+	 * This prevents double-counting closed periods that are already included in
+	 * the adjusted_lead_time used for Pass 1 ROP calculations.
+	 *
+	 * @since 0.9.17
+	 *
+	 * @param int $supplier_id    Supplier ID.
+	 * @param int $base_lead_time Base lead time in days (without closed period adjustment).
+	 *
+	 * @return int Predictive window in days.
+	 */
+	private static function get_predictive_window( $supplier_id, $base_lead_time ) {
+		// Start with 2 × base lead time.
+		$window = 2 * $base_lead_time;
+
+		// Check for closed periods within this window.
+		$today      = current_time( 'timestamp' );
+		$window_end = strtotime( "+{$window} days", $today );
+
+		$closed_days = ClosedPeriodsHelper::count_closed_days_in_range( $supplier_id, $today, $window_end );
+
+		// Add closed days to the window.
+		return $window + $closed_days;
 	}
 
 	/**

@@ -259,6 +259,40 @@ class ClosedPeriodsHelper {
 	}
 
 	/**
+	 * Count closed days within a date range
+	 *
+	 * Used by Pass 2 predictive ordering to calculate how many closed days
+	 * fall within the predictive window (2 × base lead time).
+	 *
+	 * @since 0.9.17
+	 *
+	 * @param int $supplier_id     Supplier ID.
+	 * @param int $start_timestamp Start of range (Unix timestamp).
+	 * @param int $end_timestamp   End of range (Unix timestamp).
+	 *
+	 * @return int Number of closed days in the range.
+	 */
+	public static function count_closed_days_in_range( $supplier_id, $start_timestamp, $end_timestamp ) {
+		$periods     = self::get_supplier_closed_periods( $supplier_id );
+		$closed_days = 0;
+
+		foreach ( $periods as $period ) {
+			$period_start = $period['closure_start'];
+			$period_end   = $period['closure_end'];
+
+			// Find overlap between period and range.
+			$overlap_start = max( $period_start, $start_timestamp );
+			$overlap_end   = min( $period_end, $end_timestamp );
+
+			if ( $overlap_start < $overlap_end ) {
+				$closed_days += ceil( ( $overlap_end - $overlap_start ) / DAY_IN_SECONDS );
+			}
+		}
+
+		return $closed_days;
+	}
+
+	/**
 	 * TYPE B: Check if stock will deplete during a closed period (PREDICTIVE)
 	 *
 	 * This is the CRITICAL function that implements the user's requirement:

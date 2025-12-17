@@ -14,16 +14,20 @@ Extends ATUM Inventory Management for WooCommerce with intelligent purchase orde
 
 ### Smart Inventory Algorithms
 - **Safety Stock**: Prevents stockouts using statistical service levels (90%, 95%, 99%)
-- **Trend Detection**: Adjusts for growing or declining sales patterns
-- **Seasonal Analysis**: Considers monthly sales variations
-- **Dynamic History**: Handles new products with limited sales data
+- **Trend Detection**: Adjusts for growing or declining sales patterns (70% recent, 30% historical)
+- **Seasonal Analysis**: Considers monthly sales variations (requires 365 days history)
+- **New Product Handling**: Skips seasonal analysis for products with < 1 year of sales data
 - **Inbound Stock Awareness**: Accounts for quantities already on order in pending POs
+- **MOQ Support**: Respects Minimum Order Quantity per product
 
-### Supplier Import
-- CSV import for bulk supplier creation
+### Supplier Import & Export
+- **Supplier Export**: Export all suppliers to CSV
+- **Supplier Import**: CSV import for bulk supplier creation
+- **Product-Supplier Mapping**: Export/import SKU to Supplier Code mappings
 - **Preview before import**: See what will be imported/skipped before committing
-- Norwegian column format support
+- Norwegian and English column format support
 - Duplicate detection by code or name
+- BOM (Byte Order Mark) handling for Excel compatibility
 
 ### Supplier Closed Periods
 - **Global Presets**: Define common closure periods (holidays, vacations) in ATUM Settings
@@ -81,12 +85,21 @@ All parameters that affect the ordering calculation:
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | Orders Per Year | 4 | How often to order from each supplier (determines days of stock target) |
-| Minimum Days Between Orders | 10 | Prevents too frequent orders to the same supplier |
+| Minimum Days Between Orders | 30 | Prevents too frequent orders to the same supplier |
 | Service Level | 95% | Target in-stock percentage (90%, 95%, 99%) - affects safety stock |
-| Include Seasonal Analysis | Yes | Adjusts for monthly sales patterns using future-looking analysis |
+| Include Seasonal Analysis | Yes | Adjusts for monthly sales patterns (only for products with 365+ days history) |
 | Enable Predictive Ordering | Yes | Two-pass system that orders proactively before stockouts |
 | Safety Margin (%) | 15% | Include products within this % above reorder point (Pass 2) |
-| Time-Based Prediction | Yes | Include products reaching ROP within 2× lead time (Pass 2) |
+| Time-Based Prediction | Yes | Include products reaching ROP within 2× base lead time (Pass 2) |
+
+### Notification Settings (ATUM Settings → Enhancer)
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| Notification Email (To) | WP Admin Email | Recipient for PO suggestion notifications |
+| Notification Email (CC) | - | Optional CC recipient |
+| From Name | Site Name | Sender name on notification emails |
+| From Email | WP Default | Sender email address |
 
 ### Closed Periods Settings
 
