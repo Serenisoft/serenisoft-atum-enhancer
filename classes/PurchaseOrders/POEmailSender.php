@@ -13,7 +13,6 @@ namespace SereniSoft\AtumEnhancer\PurchaseOrders;
 
 defined( 'ABSPATH' ) || die;
 
-use Atum\PurchaseOrders\Exports\POExport;
 use Atum\PurchaseOrders\PurchaseOrders;
 use Atum\Suppliers\Supplier;
 use Mpdf\Output\Destination;
@@ -499,7 +498,7 @@ class POEmailSender {
 
 		try {
 			error_log( 'SAE Email: Creating POExport for PO #' . $po_id );
-			$po_export = new POExport( $po_id );
+			$po_export = new SAEPOExport( $po_id );
 
 			// Get temp directory.
 			$upload_dir = wp_upload_dir();

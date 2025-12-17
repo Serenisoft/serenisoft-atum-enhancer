@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: SereniSoft ATUM Enhancer 0.9.21\n"
+"Project-Id-Version: SereniSoft ATUM Enhancer 0.9.23\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/serenisoft-atum-enhancer\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-12-17T10:37:14+00:00\n"
+"POT-Creation-Date: 2025-12-17T14:04:55+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: serenisoft-atum-enhancer\n"
@@ -58,7 +58,7 @@ msgstr ""
 #: classes/Bootstrap.php:222
 #: classes/BulkActions/BulkSupplierAssignment.php:231
 #: classes/Products/ProductFields.php:265
-#: classes/PurchaseOrders/POEmailSender.php:582
+#: classes/PurchaseOrders/POEmailSender.php:588
 #: classes/PurchaseOrders/POListButton.php:535
 #: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1191
 #: classes/Settings/Settings.php:2547
@@ -72,7 +72,7 @@ msgstr ""
 #: classes/Bootstrap.php:229
 #: classes/BulkActions/BulkSupplierAssignment.php:238
 #: classes/Products/ProductFields.php:272
-#: classes/PurchaseOrders/POEmailSender.php:589
+#: classes/PurchaseOrders/POEmailSender.php:595
 #: classes/PurchaseOrders/POListButton.php:542
 #: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1198
 #: classes/Settings/Settings.php:2554
@@ -126,7 +126,7 @@ msgid "Assign"
 msgstr ""
 
 #: classes/BulkActions/BulkSupplierAssignment.php:213
-#: classes/PurchaseOrders/POEmailSender.php:129
+#: classes/PurchaseOrders/POEmailSender.php:128
 #: classes/PurchaseOrders/POListButton.php:80
 #: classes/PurchaseOrders/POListButton.php:101
 #: classes/Settings/Settings.php:534
@@ -194,43 +194,43 @@ msgstr ""
 msgid "PO note for this variation..."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:86
+#: classes/PurchaseOrders/POEmailSender.php:85
 msgid "Send to Supplier"
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:121
+#: classes/PurchaseOrders/POEmailSender.php:120
 msgid "Send Purchase Order to Supplier"
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:122
+#: classes/PurchaseOrders/POEmailSender.php:121
 msgid "This will send the Purchase Order as a PDF attachment to the supplier."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:126
+#: classes/PurchaseOrders/POEmailSender.php:125
 msgid "Send Email"
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:139
+#: classes/PurchaseOrders/POEmailSender.php:138
 msgid "Sending email..."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:245
+#: classes/PurchaseOrders/POEmailSender.php:244
 msgid "Recipient:"
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:250
+#: classes/PurchaseOrders/POEmailSender.php:249
 msgid "Could not get supplier information."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:276
+#: classes/PurchaseOrders/POEmailSender.php:275
 msgid "Failed to send email."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:280
+#: classes/PurchaseOrders/POEmailSender.php:279
 msgid "An error occurred while sending the email."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:299
+#: classes/PurchaseOrders/POEmailSender.php:298
 #: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1020
 #: classes/Settings/Settings.php:852
 #: classes/Settings/Settings.php:893
@@ -240,43 +240,47 @@ msgstr ""
 msgid "Permission denied."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:305
+#: classes/PurchaseOrders/POEmailSender.php:304
 msgid "Invalid Purchase Order."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:313
+#: classes/PurchaseOrders/POEmailSender.php:312
 msgid "No supplier assigned to this Purchase Order."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:321
+#: classes/PurchaseOrders/POEmailSender.php:320
 msgid "Supplier does not have an email address."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:332
+#: classes/PurchaseOrders/POEmailSender.php:331
 msgid "Override Recipient"
 msgstr ""
 
 #. translators: %s: recipient email
-#: classes/PurchaseOrders/POEmailSender.php:349
+#: classes/PurchaseOrders/POEmailSender.php:348
 #, php-format
 msgid "Purchase Order sent successfully to %s"
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:355
+#: classes/PurchaseOrders/POEmailSender.php:354
 msgid "Invalid request."
 msgstr ""
 
 #. translators: 1: PO number, 2: supplier name
-#: classes/PurchaseOrders/POEmailSender.php:427
+#: classes/PurchaseOrders/POEmailSender.php:426
 #, php-format
 msgid "Purchase Order #%1$d - %2$s"
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:469
+#: classes/PurchaseOrders/POEmailSender.php:468
 msgid "Failed to send email. Please check your server email configuration."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:536
+#: classes/PurchaseOrders/POEmailSender.php:516
+msgid "Could not create temporary directory for PDF."
+msgstr ""
+
+#: classes/PurchaseOrders/POEmailSender.php:542
 msgid "Failed to write PDF file."
 msgstr ""
 
@@ -415,6 +419,10 @@ msgstr ""
 
 #: classes/PurchaseOrders/POListButton.php:514
 msgid "Purchase Orders created"
+msgstr ""
+
+#: classes/PurchaseOrders/POPDFModifier.php:125
+msgid "Notes"
 msgstr ""
 
 #: classes/PurchaseOrderSuggestions/POSuggestionAlgorithm.php:754
