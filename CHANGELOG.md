@@ -2,6 +2,21 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.19] - 2025-12-17
+
+### Added
+- **Seasonal Pattern Validation**: Verify that seasonal patterns are consistent across years before applying adjustment
+  - Compares monthly sales distribution between years using Pearson correlation
+  - Requires correlation ≥ 0.60 for seasonal adjustment to be applied
+  - Prevents trend growth from being misinterpreted as seasonality
+  - New logging shows validation result: VALIDATED or SKIPPED with correlation value
+  - Requires minimum 2 years of data with 6+ months and 12+ sales each
+
+### Technical Details
+- New `validate_seasonal_pattern()` function calculates year-over-year correlation
+- New `calculate_pattern_correlation()` function implements Pearson correlation
+- Seasonal adjustment only applied when pattern is consistent across years
+
 ## [0.9.18] - 2025-12-17
 
 ### Fixed

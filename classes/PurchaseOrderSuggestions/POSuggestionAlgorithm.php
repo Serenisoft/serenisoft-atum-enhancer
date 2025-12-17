@@ -696,6 +696,143 @@ class POSuggestionAlgorithm {
 	}
 
 	/**
+	 * Validate that seasonal pattern is consistent across years (not just trend)
+	 *
+	 * Compares monthly sales patterns between years using Pearson correlation.
+	 * Only applies seasonal adjustment if the pattern is consistent (correlation >= 0.6).
+	 *
+	 * @since 0.9.19
+	 *
+	 * @param int $product_id Product ID.
+	 * @return array ['is_valid' => bool, 'correlation' => float, 'years_compared' => int, 'reason' => string]
+	 */
+	private static function validate_seasonal_pattern( $product_id ) {
+
+		global $wpdb;
+
+		// Get monthly sales grouped by year AND month.
+		$yearly_monthly = $wpdb->get_results( $wpdb->prepare(
+			"SELECT YEAR(p.post_date) as year, MONTH(p.post_date) as month,
+					SUM(oim.meta_value) as sales
+			FROM {$wpdb->prefix}woocommerce_order_itemmeta oim
+			INNER JOIN {$wpdb->prefix}woocommerce_order_items oi ON oim.order_item_id = oi.order_item_id
+			INNER JOIN {$wpdb->posts} p ON oi.order_id = p.ID
+			WHERE oim.meta_key = '_qty'
+			AND oi.order_item_type = 'line_item'
+			AND p.post_type = 'shop_order'
+			AND p.post_status IN ('wc-completed', 'wc-processing')
+			AND oi.order_item_id IN (
+				SELECT order_item_id FROM {$wpdb->prefix}woocommerce_order_itemmeta
+				WHERE meta_key IN ('_product_id', '_variation_id')
+				AND meta_value = %d
+			)
+			GROUP BY YEAR(p.post_date), MONTH(p.post_date)
+			ORDER BY year, month",
+			$product_id
+		) );
+
+		// Organize data by year.
+		$years_data = array();
+		foreach ( $yearly_monthly as $row ) {
+			$years_data[ $row->year ][ $row->month ] = (float) $row->sales;
+		}
+
+		// Need at least 2 years with meaningful data.
+		$valid_years = array();
+		foreach ( $years_data as $year => $months ) {
+			$year_total = array_sum( $months );
+			if ( $year_total >= 12 && count( $months ) >= 6 ) {
+				$valid_years[ $year ] = $months;
+			}
+		}
+
+		if ( count( $valid_years ) < 2 ) {
+			return array(
+				'is_valid'       => false,
+				'correlation'    => 0,
+				'years_compared' => count( $valid_years ),
+				'reason'         => __( 'Not enough yearly data (need 2+ years with 6+ months each)', 'serenisoft-atum-enhancer' ),
+			);
+		}
+
+		// Calculate monthly percentages for each year.
+		$patterns = array();
+		foreach ( $valid_years as $year => $months ) {
+			$year_total = array_sum( $months );
+			$pattern    = array();
+			for ( $m = 1; $m <= 12; $m++ ) {
+				$pattern[ $m ] = isset( $months[ $m ] ) ? ( $months[ $m ] / $year_total ) : 0;
+			}
+			$patterns[ $year ] = $pattern;
+		}
+
+		// Calculate correlation between consecutive years.
+		$years        = array_keys( $patterns );
+		$correlations = array();
+
+		for ( $i = 0; $i < count( $years ) - 1; $i++ ) {
+			$year1          = $patterns[ $years[ $i ] ];
+			$year2          = $patterns[ $years[ $i + 1 ] ];
+			$correlations[] = self::calculate_pattern_correlation( $year1, $year2 );
+		}
+
+		$avg_correlation = count( $correlations ) > 0 ? array_sum( $correlations ) / count( $correlations ) : 0;
+
+		// Threshold: 0.6 = moderate correlation indicates consistent pattern.
+		$threshold = 0.6;
+
+		return array(
+			'is_valid'       => $avg_correlation >= $threshold,
+			'correlation'    => round( $avg_correlation, 2 ),
+			'years_compared' => count( $valid_years ),
+			'reason'         => $avg_correlation >= $threshold
+				? __( 'Pattern consistent across years', 'serenisoft-atum-enhancer' )
+				: __( 'Pattern varies between years (likely trend, not seasonality)', 'serenisoft-atum-enhancer' ),
+		);
+
+	}
+
+	/**
+	 * Calculate Pearson correlation between two monthly patterns
+	 *
+	 * @since 0.9.19
+	 *
+	 * @param array $pattern1 Monthly percentages for year 1 (1-12 indexed).
+	 * @param array $pattern2 Monthly percentages for year 2 (1-12 indexed).
+	 * @return float Correlation coefficient (-1 to 1).
+	 */
+	private static function calculate_pattern_correlation( $pattern1, $pattern2 ) {
+
+		$n        = 12;
+		$sum1     = 0;
+		$sum2     = 0;
+		$sum1_sq  = 0;
+		$sum2_sq  = 0;
+		$sum_prod = 0;
+
+		for ( $m = 1; $m <= 12; $m++ ) {
+			$v1 = isset( $pattern1[ $m ] ) ? $pattern1[ $m ] : 0;
+			$v2 = isset( $pattern2[ $m ] ) ? $pattern2[ $m ] : 0;
+
+			$sum1     += $v1;
+			$sum2     += $v2;
+			$sum1_sq  += $v1 * $v1;
+			$sum2_sq  += $v2 * $v2;
+			$sum_prod += $v1 * $v2;
+		}
+
+		$numerator   = ( $n * $sum_prod ) - ( $sum1 * $sum2 );
+		$denominator = sqrt( ( $n * $sum1_sq - $sum1 * $sum1 ) * ( $n * $sum2_sq - $sum2 * $sum2 ) );
+
+		if ( 0 === $denominator ) {
+			return 0;
+		}
+
+		return $numerator / $denominator;
+
+	}
+
+	/**
 	 * Apply seasonal adjustment to daily sales average
 	 *
 	 * Uses future-looking seasonal analysis based on when the order will arrive
@@ -713,6 +850,24 @@ class POSuggestionAlgorithm {
 	public static function apply_seasonal_adjustment( $product_id, $avg_daily, $lead_time = 14, $days_of_stock_target = 91 ) {
 
 		global $wpdb;
+
+		// Validate that seasonal pattern is consistent across years (not just trend).
+		$validation = self::validate_seasonal_pattern( $product_id );
+
+		if ( ! $validation['is_valid'] ) {
+			// Log why seasonal was skipped.
+			if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
+				$product = wc_get_product( $product_id );
+				$sku     = $product ? ( $product->get_sku() ?: 'N/A' ) : 'N/A';
+				error_log( sprintf(
+					'SAE DEBUG: [Seasonal] [%s] SKIPPED - %s (correlation: %.2f, threshold: 0.60)',
+					$sku,
+					$validation['reason'],
+					$validation['correlation']
+				) );
+			}
+			return $avg_daily;
+		}
 
 		// Calculate when the order will arrive.
 		$arrival_timestamp = strtotime( "+{$lead_time} days" );
@@ -799,6 +954,15 @@ class POSuggestionAlgorithm {
 		if ( 'yes' === Settings::get( 'sae_enable_debug_logging', 'no' ) ) {
 			$product = wc_get_product( $product_id );
 			$sku = $product ? ( $product->get_sku() ?: 'N/A' ) : 'N/A';
+
+			// Log validation result.
+			error_log( sprintf(
+				'SAE DEBUG: [Seasonal] [%s] VALIDATED - %d years compared, correlation: %.2f (threshold: 0.60)',
+				$sku,
+				$validation['years_compared'],
+				$validation['correlation']
+			) );
+
 			$month_names = [ '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' ];
 
 			// Build coverage months string
