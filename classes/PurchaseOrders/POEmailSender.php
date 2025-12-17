@@ -506,10 +506,17 @@ class POEmailSender {
 			$temp_dir   = $upload_dir['basedir'] . '/sae-temp';
 
 			error_log( 'SAE Email: Temp dir: ' . $temp_dir );
+			error_log( 'SAE Email: Directory exists: ' . ( is_dir( $temp_dir ) ? 'yes' : 'no' ) );
 
 			if ( ! is_dir( $temp_dir ) ) {
-				wp_mkdir_p( $temp_dir );
-				error_log( 'SAE Email: Created temp dir' );
+				$created = wp_mkdir_p( $temp_dir );
+				error_log( 'SAE Email: wp_mkdir_p result: ' . ( $created ? 'success' : 'FAILED' ) );
+
+				if ( ! $created || ! is_dir( $temp_dir ) ) {
+					error_log( 'SAE Email: Could not create temp directory: ' . $temp_dir );
+					return new \WP_Error( 'dir_create_failed', __( 'Could not create temporary directory for PDF.', 'serenisoft-atum-enhancer' ) );
+				}
+				error_log( 'SAE Email: Created temp dir successfully' );
 			}
 
 			$pdf_filename = 'po-' . $po_id . '-' . time() . '.pdf';

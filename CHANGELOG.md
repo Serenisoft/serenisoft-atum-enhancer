@@ -2,6 +2,13 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.22] - 2025-12-17
+
+### Fixed
+- **PDF Temp Directory**: Better error handling when creating temp directory for PDF email attachments
+  - Now properly checks if directory creation succeeded
+  - Shows meaningful error message if temp directory cannot be created
+
 ## [0.9.21] - 2025-12-17
 
 ### Added
