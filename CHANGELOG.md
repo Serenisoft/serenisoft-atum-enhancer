@@ -4,11 +4,10 @@ All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
 ## [0.9.23] - 2025-12-17
 
-### Changed
-- **PDF Notes Position**: Notes now appear ABOVE order lines in Purchase Order PDFs instead of at the bottom
-  - Global PO Note and Supplier PO Note are shown before the items table
-  - Makes important information more visible to suppliers
-  - Custom SAEPOExport class extends ATUM's PDF generation
+### Added
+- **PDF Notes Position**: Notes now appear at the top of the PDF (after header, before addresses)
+  - Global and supplier notes displayed in a styled box above order lines
+  - Prevents notes from being cut off at bottom of PDF
 
 ## [0.9.22] - 2025-12-17
 

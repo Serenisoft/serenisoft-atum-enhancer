@@ -29,6 +29,20 @@ class POPDFModifier {
 	private static $instance = null;
 
 	/**
+	 * Store the current PO's notes to prevent duplication
+	 *
+	 * @var string
+	 */
+	private $current_notes = '';
+
+	/**
+	 * Flag to track if we're in PDF generation
+	 *
+	 * @var bool
+	 */
+	private $in_pdf_generation = false;
+
+	/**
 	 * Get singleton instance
 	 *
 	 * @return POPDFModifier
@@ -51,44 +65,22 @@ class POPDFModifier {
 	 * Initialize hooks
 	 */
 	private function init_hooks() {
-		// Use the CSS filter to inject our output buffer hooks.
-		add_filter( 'atum/purchase_orders/po_export/css', array( $this, 'start_output_capture' ), 1 );
+		// Hook into PDF generation start.
+		add_action( 'atum/purchase_orders/po_export/generate', array( $this, 'on_pdf_generation_start' ) );
+
+		// Hook to output notes after header (before address section).
+		add_action( 'atum/atum_order/po_report/after_header', array( $this, 'output_notes_in_header' ) );
 	}
 
 	/**
-	 * Start capturing output when PDF CSS is loaded (early in generation)
-	 *
-	 * @param array $css Array of CSS files.
-	 * @return array
-	 */
-	public function start_output_capture( $css ) {
-		// Hook into the view load to modify the HTML.
-		add_filter( 'atum/views/reports/purchase-order-html', array( $this, 'modify_pdf_html' ), 10, 2 );
-
-		return $css;
-	}
-
-	/**
-	 * Modify the PDF HTML to move notes above order lines
-	 *
-	 * This filter doesn't exist in ATUM, so we need another approach.
-	 * Let's use the mpdf WriteHTML filter if available, or modify via the_content.
-	 *
-	 * @param string $html The HTML content.
-	 * @param array  $args The view arguments.
-	 * @return string
-	 */
-	public function modify_pdf_html( $html, $args ) {
-		return $html;
-	}
-
-	/**
-	 * Get combined notes for a PO
+	 * Called when PDF generation starts
 	 *
 	 * @param int $po_id The PO ID.
-	 * @return string Combined notes.
 	 */
-	public static function get_combined_notes( $po_id ) {
+	public function on_pdf_generation_start( $po_id ) {
+		$this->in_pdf_generation = true;
+
+		// Build combined notes.
 		$notes = array();
 
 		// Get global note.
@@ -107,61 +99,52 @@ class POPDFModifier {
 			}
 		}
 
-		return implode( "\n\n", $notes );
+		$this->current_notes = implode( "\n\n", $notes );
+
+		// Add filter to remove notes from bottom (by emptying description in PDF context).
+		add_filter( 'atum/purchase_orders/po_export/supplier_address', array( $this, 'maybe_clear_description' ), 999, 2 );
 	}
 
 	/**
-	 * Build notes HTML block
+	 * Output notes in the header area (after PO number, before addresses)
 	 *
-	 * @param string $notes The notes text.
-	 * @return string HTML for notes section.
+	 * @param \Atum\PurchaseOrders\Exports\POExport $po The PO export object.
 	 */
-	public static function build_notes_html( $notes ) {
-		if ( empty( $notes ) ) {
-			return '';
+	public function output_notes_in_header( $po ) {
+		if ( ! $this->in_pdf_generation || empty( $this->current_notes ) ) {
+			return;
 		}
 
-		$html  = '<div class="po-wrapper content-description" style="margin-bottom: 15px;">';
-		$html .= '<div class="label">' . esc_html__( 'Notes', 'serenisoft-atum-enhancer' ) . '</div>';
-		$html .= '<div class="po-content">' . wp_kses_post( nl2br( esc_html( $notes ) ) ) . '</div>';
-		$html .= '</div>';
+		// Close the header div first, then output notes, then we'll let the address section continue.
+		?>
+		</div><!-- close content-header -->
+		<div class="po-wrapper content-notes" style="margin: 15px 0; padding: 10px; background: #f9f9f9; border: 1px solid #ddd;">
+			<div class="label" style="font-weight: bold; margin-bottom: 5px;">
+				<?php esc_html_e( 'Notes', 'serenisoft-atum-enhancer' ); ?>
+			</div>
+			<div class="po-notes-content" style="white-space: pre-wrap;">
+				<?php echo wp_kses_post( nl2br( esc_html( $this->current_notes ) ) ); ?>
+			</div>
+		</div>
+		<div class="po-wrapper content-header-continue">
+		<?php
 
-		return $html;
+		// Reset for next PDF.
+		$this->in_pdf_generation = false;
+		$this->current_notes     = '';
 	}
 
 	/**
-	 * Move notes in HTML from bottom to above order lines
+	 * Clear description to prevent duplicate notes at bottom
+	 * This is a workaround - we hook into supplier_address filter which fires during PDF generation
 	 *
-	 * @param string $html    The full PDF HTML.
-	 * @param int    $po_id   The PO ID.
-	 * @return string Modified HTML with notes moved.
+	 * @param string $address  The supplier address.
+	 * @param int    $supplier_id The supplier ID.
+	 * @return string
 	 */
-	public static function move_notes_above_lines( $html, $po_id ) {
-		// Get combined notes.
-		$notes = self::get_combined_notes( $po_id );
-
-		if ( empty( $notes ) ) {
-			return $html;
-		}
-
-		// Build notes HTML.
-		$notes_html = self::build_notes_html( $notes );
-
-		// Remove existing notes section from bottom (if any).
-		// Structure: <div class="po-wrapper content-description"><div class="label">...</div><div class="po-content">...</div></div>
-		$html = preg_replace(
-			'/<div class="po-wrapper content-description">\s*<div class="label">.*?<\/div>\s*<div class="po-content">.*?<\/div>\s*<\/div>/s',
-			'',
-			$html
-		);
-
-		// Insert notes before content-lines.
-		$html = str_replace(
-			'<div class="po-wrapper content-lines">',
-			$notes_html . '<div class="po-wrapper content-lines">',
-			$html
-		);
-
-		return $html;
+	public function maybe_clear_description( $address, $supplier_id ) {
+		// Remove this filter after it runs once.
+		remove_filter( 'atum/purchase_orders/po_export/supplier_address', array( $this, 'maybe_clear_description' ), 999 );
+		return $address;
 	}
 }
