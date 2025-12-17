@@ -104,7 +104,7 @@ class POListButton {
 			</div>
 		</div>
 
-		<div id="sae-generate-result" style="position: fixed; bottom: 20px; right: 20px; max-width: 500px; z-index: 9999;"></div>
+		<div id="sae-generate-result" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 500px; z-index: 9999;"></div>
 
 		<!-- Loading Overlay -->
 		<div id="sae-loading-overlay" style="display: none;">
