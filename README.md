@@ -228,6 +228,36 @@ The seasonal adjustment uses a sophisticated future-looking approach instead of 
 - Global safety net: Total adjustments (trend + seasonal) capped at 0.4x-10x
 - 10x cap allows extreme seasonal variations while protecting against data errors
 
+**Pattern Validation (Trend vs Seasonality):**
+
+Before applying seasonal adjustment, the algorithm validates that the pattern is consistent across years (not just trend growth). This prevents products with increasing sales from being misinterpreted as having seasonal peaks.
+
+*How validation works:*
+1. Get monthly sales data for each year separately
+2. Calculate each month's percentage of that year's total sales
+3. Compare patterns between consecutive years using Pearson correlation
+4. Only apply seasonal adjustment if correlation ≥ 0.60
+
+*Requirements for seasonal analysis:*
+- Minimum 2 years of sales data
+- At least 6 months with sales per year
+- At least 12 units sold per year
+- Pattern correlation ≥ 0.60 between years
+
+*Example - True seasonality (correlation 0.85):*
+```
+Year 2023: Jan:5%, Feb:6%, Mar:8%, ... Sep:15%, Oct:12%, Nov:10%, Dec:8%
+Year 2024: Jan:4%, Feb:7%, Mar:9%, ... Sep:14%, Oct:13%, Nov:11%, Dec:7%
+→ Similar pattern each year = VALIDATED, seasonal factor applied
+```
+
+*Example - Trend growth (correlation 0.32):*
+```
+Year 2023: Jan:2%, Feb:3%, Mar:4%, ... Sep:10%, Oct:12%, Nov:15%, Dec:18%
+Year 2024: Jan:8%, Feb:8%, Mar:9%, ... Sep:8%, Oct:9%, Nov:8%, Dec:9%
+→ Pattern changed = SKIPPED, no seasonal adjustment (use trend instead)
+```
+
 **Benefits:**
 - Prevents under-ordering before seasonal peaks
 - Prevents over-ordering for off-season periods
