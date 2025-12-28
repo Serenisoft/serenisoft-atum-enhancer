@@ -1,11 +1,11 @@
 <?php
 /**
- * SereniSoft ATUM Enhancer
+ * ATUM Enhancer
  *
  * @package              SereniSoft\AtumEnhancer
  *
  * @wordpress-plugin
- * Plugin Name:          SereniSoft ATUM Enhancer
+ * Plugin Name:          ATUM Enhancer
  * Requires Plugins:     woocommerce, atum-stock-manager-for-woocommerce
  * Plugin URI:           https://serenisoft.no/
  * Description:          SAE (SereniSoft ATUM Enhancer) extends ATUM Inventory Management with automatic purchase order suggestions based on stock levels, lead times, seasonal patterns, and supplier closed periods.
