@@ -20,6 +20,12 @@ Extends ATUM Inventory Management for WooCommerce with intelligent purchase orde
 - **Inbound Stock Awareness**: Accounts for quantities already on order in pending POs
 - **MOQ Support**: Respects Minimum Order Quantity per product
 
+### Restock Status Integration
+- **SAE-Controlled Restock**: Overrides ATUM's restock_status with SAE algorithm results
+- **Update Restock Status Button**: One-click update in Stock Central toolbar
+- **Suggested Quantity Column**: Shows calculated reorder qty in Stock Central
+- **Consistent Logic**: Same algorithm for both restock status and PO generation
+
 ### Supplier Import & Export
 - **Supplier Export**: Export all suppliers to CSV
 - **Supplier Import**: CSV import for bulk supplier creation

@@ -58,6 +58,18 @@ class POSuggestionGenerator {
 		// Register custom cron schedules.
 		add_filter( 'cron_schedules', array( $this, 'add_custom_cron_schedules' ) );
 
+		// Register AJAX handler for restock-only update.
+		add_action( 'wp_ajax_sae_update_restock_only', array( $this, 'ajax_update_restock_only' ) );
+
+		// Override ATUM's restock_status calculation.
+		add_filter( 'atum/is_product_restock_status', array( $this, 'override_atum_restock' ), 10, 2 );
+
+		// Add button to Stock Central page.
+		add_action( 'atum/stock_central_list/page_title_buttons', array( $this, 'render_restock_button' ) );
+
+		// Add inline script for the button.
+		add_action( 'admin_footer', array( $this, 'add_restock_button_script' ) );
+
 	}
 
 	/**
@@ -135,9 +147,11 @@ class POSuggestionGenerator {
 	 *
 	 * @since 1.0.0
 	 *
+	 * @param bool $create_pos Whether to create POs (true) or just update restock status (false).
+	 *
 	 * @return array|WP_Error Result array or error.
 	 */
-	public function generate_suggestions() {
+	public function generate_suggestions( $create_pos = true ) {
 
 		$created_pos            = array();
 		$skipped                = 0;
@@ -145,6 +159,11 @@ class POSuggestionGenerator {
 		$choices                = array(); // NEW: Track suppliers needing user choice
 		$total_products         = 0;
 		$products_below_reorder = 0;
+
+		// If restock-only mode, reset all products first.
+		if ( ! $create_pos ) {
+			$this->reset_all_restock_status();
+		}
 
 		// Check if dry run mode is enabled.
 		$dry_run = 'yes' === \Atum\Inc\Helpers::get_option( 'sae_enable_dry_run', 'no' );
@@ -278,6 +297,11 @@ class POSuggestionGenerator {
 			$total_products       += $product_count;
 			$products_below_reorder += count( $all_products_to_reorder ); // Count all, not just filtered
 
+			// Update restock meta for all products needing reorder.
+			foreach ( $all_products_to_reorder as $product_data ) {
+				$this->update_product_restock_meta( $product_data );
+			}
+
 			// If no products left to order after filtering, skip.
 			if ( empty( $products_to_reorder ) ) {
 				error_log( sprintf( 'SAE: Supplier #%d (%s) - no products need reordering (all already in existing POs), skipping', $supplier_id, $supplier_name ) );
@@ -298,7 +322,7 @@ class POSuggestionGenerator {
 			}
 
 			// No existing POs - create new (or simulate in dry run mode).
-			if ( ! $dry_run ) {
+			if ( ! $dry_run && $create_pos ) {
 				error_log( sprintf( 'SAE: Creating PO for supplier #%d (%s) with %d products', $supplier_id, $supplier_name, count( $products_to_reorder ) ) );
 				$result = $this->create_po_for_supplier( $supplier_id, $products_to_reorder );
 
@@ -320,7 +344,7 @@ class POSuggestionGenerator {
 					) );
 					$created_pos[] = $result;
 				}
-			} else {
+			} elseif ( $dry_run ) {
 				error_log( sprintf( 'SAE: DRY RUN - Would create PO for supplier #%d (%s) with %d products', $supplier_id, $supplier_name, count( $products_to_reorder ) ) );
 				$result        = $this->simulate_po_creation( $supplier_id, $supplier_name, $products_to_reorder );
 				$created_pos[] = $result;
@@ -1176,6 +1200,205 @@ class POSuggestionGenerator {
 			error_log( sprintf( 'SAE: Exception adding to PO #%d: %s', $po_id, $e->getMessage() ) );
 			return new \WP_Error( 'exception', $e->getMessage() );
 		}
+
+	}
+
+
+	/*******************
+	 * Restock status methods
+	 *******************/
+
+	/**
+	 * Reset restock status for all products with suppliers
+	 *
+	 * @since 0.9.24
+	 */
+	private function reset_all_restock_status() {
+
+		global $wpdb;
+
+		$atum_table = $wpdb->prefix . \Atum\Inc\Globals::ATUM_PRODUCT_DATA_TABLE;
+
+		// Get all products with supplier.
+		$product_ids = $wpdb->get_col(
+			"SELECT product_id FROM {$atum_table} WHERE supplier_id IS NOT NULL AND supplier_id > 0"
+		);
+
+		foreach ( $product_ids as $product_id ) {
+			update_post_meta( $product_id, '_sae_needs_reorder', 'no' );
+			update_post_meta( $product_id, '_sae_suggested_qty', 0 );
+
+			$atum_product = \Atum\Inc\Helpers::get_atum_product( $product_id );
+			if ( $atum_product ) {
+				$atum_product->set_restock_status( 'no' );
+				$atum_product->save_atum_data();
+			}
+		}
+
+	}
+
+	/**
+	 * Update restock meta for a single product
+	 *
+	 * @since 0.9.24
+	 *
+	 * @param array $product_data Product data from algorithm.
+	 */
+	private function update_product_restock_meta( $product_data ) {
+
+		$product_id = $product_data['product_id'];
+
+		update_post_meta( $product_id, '_sae_needs_reorder', 'yes' );
+		update_post_meta( $product_id, '_sae_suggested_qty', $product_data['suggested_qty'] );
+		update_post_meta( $product_id, '_sae_restock_updated', current_time( 'timestamp' ) );
+
+		$atum_product = \Atum\Inc\Helpers::get_atum_product( $product_id );
+		if ( $atum_product ) {
+			$atum_product->set_restock_status( 'yes' );
+			$atum_product->save_atum_data();
+		}
+
+	}
+
+	/**
+	 * Override ATUM's restock_status calculation
+	 *
+	 * @since 0.9.24
+	 *
+	 * @param bool        $restock_needed Original ATUM restock status.
+	 * @param \WC_Product $product        Product object.
+	 *
+	 * @return bool SAE's calculated restock status.
+	 */
+	public function override_atum_restock( $restock_needed, $product ) {
+
+		$sae_value = get_post_meta( $product->get_id(), '_sae_needs_reorder', true );
+
+		if ( '' !== $sae_value ) {
+			return 'yes' === $sae_value;
+		}
+
+		return $restock_needed;
+
+	}
+
+	/**
+	 * AJAX handler for restock-only update
+	 *
+	 * @since 0.9.24
+	 */
+	public function ajax_update_restock_only() {
+
+		// Check nonce.
+		if ( ! check_ajax_referer( 'sae_update_restock_only', 'nonce', false ) ) {
+			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		// Check permissions.
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to update restock status.', 'serenisoft-atum-enhancer' ) ) );
+		}
+
+		try {
+			$result = $this->generate_suggestions( false );
+
+			if ( is_wp_error( $result ) ) {
+				wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+			}
+
+			wp_send_json_success( array(
+				'message' => sprintf(
+					/* translators: %d: number of products needing restock */
+					__( 'Restock status updated. %d products need restocking.', 'serenisoft-atum-enhancer' ),
+					$result['products_below_reorder']
+				),
+				'products_needing_restock' => $result['products_below_reorder'],
+			) );
+
+		} catch ( \Exception $e ) {
+			wp_send_json_error( array( 'message' => $e->getMessage() ) );
+		}
+
+	}
+
+	/**
+	 * Render restock button in Stock Central
+	 *
+	 * @since 0.9.24
+	 */
+	public function render_restock_button() {
+		?>
+		<button id="sae-update-restock-status" class="page-title-action" style="margin-left: 10px;">
+			<?php esc_html_e( 'Update Restock Status (SAE)', 'serenisoft-atum-enhancer' ); ?>
+		</button>
+		<span id="sae-restock-status-spinner" style="display: none; margin-left: 5px;">
+			<span class="spinner" style="visibility: visible; float: none;"></span>
+		</span>
+		<?php
+	}
+
+	/**
+	 * Add inline script for restock button
+	 *
+	 * @since 0.9.24
+	 */
+	public function add_restock_button_script() {
+
+		$screen = get_current_screen();
+
+		if ( ! $screen || false === strpos( $screen->id, 'atum-stock-central' ) ) {
+			return;
+		}
+
+		$nonce = wp_create_nonce( 'sae_update_restock_only' );
+		?>
+		<script type="text/javascript">
+		jQuery(document).ready(function($) {
+			$('#sae-update-restock-status').on('click', function(e) {
+				e.preventDefault();
+
+				var $button = $(this);
+				var $spinner = $('#sae-restock-status-spinner');
+
+				if ($button.prop('disabled')) {
+					return;
+				}
+
+				if (!confirm('<?php echo esc_js( __( 'This will update the restock status for all products based on SAE algorithm. Continue?', 'serenisoft-atum-enhancer' ) ); ?>')) {
+					return;
+				}
+
+				$button.prop('disabled', true);
+				$spinner.show();
+
+				$.ajax({
+					url: ajaxurl,
+					type: 'POST',
+					data: {
+						action: 'sae_update_restock_only',
+						nonce: '<?php echo esc_js( $nonce ); ?>'
+					},
+					success: function(response) {
+						$button.prop('disabled', false);
+						$spinner.hide();
+
+						if (response.success) {
+							alert(response.data.message);
+							location.reload();
+						} else {
+							alert('<?php echo esc_js( __( 'Error:', 'serenisoft-atum-enhancer' ) ); ?> ' + response.data.message);
+						}
+					},
+					error: function(xhr, status, error) {
+						$button.prop('disabled', false);
+						$spinner.hide();
+						alert('<?php echo esc_js( __( 'AJAX Error:', 'serenisoft-atum-enhancer' ) ); ?> ' + error);
+					}
+				});
+			});
+		});
+		</script>
+		<?php
 
 	}
 

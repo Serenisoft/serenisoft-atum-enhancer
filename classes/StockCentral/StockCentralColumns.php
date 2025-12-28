@@ -46,6 +46,15 @@ class StockCentralColumns {
 		// Add scripts for Stock Central.
 		add_action( 'admin_footer', array( $this, 'add_inline_script' ) );
 
+		// Add Suggested Qty column to the Purchasing group.
+		add_filter( 'atum/stock_central_list/column_group_members', array( $this, 'add_suggested_qty_column_to_group' ), 11 );
+
+		// Add Suggested Qty column definition.
+		add_filter( 'atum/stock_central_list/table_columns', array( $this, 'add_suggested_qty_column' ), 11 );
+
+		// Render Suggested Qty column value.
+		add_filter( 'atum/list_table/column_default__sae_suggested_qty', array( $this, 'render_suggested_qty_column' ), 10, 4 );
+
 	}
 
 	/**
@@ -117,6 +126,81 @@ class StockCentralColumns {
 		return sprintf(
 			'<input type="number" class="sae-moq-input" data-meta="sae_moq" value="%s" min="1" step="1" placeholder="1" style="width:65px;text-align:center;">',
 			$moq > 1 ? esc_attr( $moq ) : ''
+		);
+
+	}
+
+	/**
+	 * Add Suggested Qty column to the Purchasing group
+	 *
+	 * @since 0.9.24
+	 *
+	 * @param array $groups Column groups.
+	 *
+	 * @return array
+	 */
+	public function add_suggested_qty_column_to_group( $groups ) {
+
+		foreach ( $groups as $group_key => &$group ) {
+			if ( 'purchasing' === $group_key && isset( $group['members'] ) ) {
+				$group['members'][] = '_sae_suggested_qty';
+			}
+		}
+
+		return $groups;
+
+	}
+
+	/**
+	 * Add Suggested Qty column definition
+	 *
+	 * @since 0.9.24
+	 *
+	 * @param array $columns Table columns.
+	 *
+	 * @return array
+	 */
+	public function add_suggested_qty_column( $columns ) {
+
+		$new_columns = array();
+
+		foreach ( $columns as $key => $label ) {
+			$new_columns[ $key ] = $label;
+
+			// Add Suggested Qty after MOQ.
+			if ( '_sae_moq' === $key ) {
+				$new_columns['_sae_suggested_qty'] = __( 'Suggested', 'serenisoft-atum-enhancer' );
+			}
+		}
+
+		return $new_columns;
+
+	}
+
+	/**
+	 * Render Suggested Qty column value
+	 *
+	 * @since 0.9.24
+	 *
+	 * @param string       $column_item Default column content.
+	 * @param \WP_Post     $item        The post object.
+	 * @param \WC_Product  $product     The product object.
+	 * @param object       $list_table  The list table instance.
+	 *
+	 * @return string
+	 */
+	public function render_suggested_qty_column( $column_item, $item, $product, $list_table ) {
+
+		$product_id    = $product->get_id();
+		$suggested_qty = get_post_meta( $product_id, '_sae_suggested_qty', true );
+
+		if ( empty( $suggested_qty ) || $suggested_qty < 1 ) {
+			return '<span class="set-meta" style="display:block;text-align:center;color:#999;">-</span>';
+		}
+
+		return sprintf(
+			'<span class="set-meta" style="display:block;text-align:center;font-weight:600;color:#0073aa;">%d</span>',
+			absint( $suggested_qty )
 		);
 
 	}

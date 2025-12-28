@@ -2,6 +2,27 @@
 
 All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
 
+## [0.9.24] - 2025-12-28
+
+### Added
+- **Restock Status Integration**: SAE algorithm now controls ATUM's restock_status field
+  - "Update Restock Status (SAE)" button in Stock Central toolbar
+  - Resets all products, then marks those needing reorder based on SAE algorithm
+  - Overrides ATUM's built-in restock calculation via `atum/is_product_restock_status` filter
+  - Products needing restock are identified using the same logic as PO generation
+
+- **Suggested Quantity Column**: New "Suggested" column in Stock Central (Purchasing group)
+  - Shows calculated reorder quantity for each product
+  - Displays "-" for products not needing restock
+  - Updates when "Update Restock Status" is clicked
+  - Stored in `_sae_suggested_qty` meta field
+
+### Technical Details
+- New parameter `$create_pos` in `generate_suggestions()` - when false, updates restock status only
+- New methods: `reset_all_restock_status()`, `update_product_restock_meta()`
+- AJAX endpoint: `sae_update_restock_only` with nonce verification
+- Meta fields: `_sae_needs_reorder`, `_sae_suggested_qty`, `_sae_restock_updated`
+
 ## [0.9.23] - 2025-12-17
 
 ### Added

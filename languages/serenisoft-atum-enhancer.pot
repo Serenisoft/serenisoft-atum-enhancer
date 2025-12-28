@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: SereniSoft ATUM Enhancer 0.9.23\n"
+"Project-Id-Version: SereniSoft ATUM Enhancer 0.9.24\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/serenisoft-atum-enhancer\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-12-17T14:04:55+00:00\n"
+"POT-Creation-Date: 2025-12-28T15:23:34+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: serenisoft-atum-enhancer\n"
@@ -58,12 +58,12 @@ msgstr ""
 #: classes/Bootstrap.php:222
 #: classes/BulkActions/BulkSupplierAssignment.php:231
 #: classes/Products/ProductFields.php:265
-#: classes/PurchaseOrders/POEmailSender.php:588
+#: classes/PurchaseOrders/POEmailSender.php:589
 #: classes/PurchaseOrders/POListButton.php:535
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1191
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1414
 #: classes/Settings/Settings.php:2547
 #: classes/StockCentral/SalesDataColumns.php:329
-#: classes/StockCentral/StockCentralColumns.php:230
+#: classes/StockCentral/StockCentralColumns.php:314
 #: classes/SupplierImport/SupplierImport.php:537
 #: classes/Suppliers/SupplierFields.php:391
 msgid "Cloning is not allowed."
@@ -72,12 +72,12 @@ msgstr ""
 #: classes/Bootstrap.php:229
 #: classes/BulkActions/BulkSupplierAssignment.php:238
 #: classes/Products/ProductFields.php:272
-#: classes/PurchaseOrders/POEmailSender.php:595
+#: classes/PurchaseOrders/POEmailSender.php:596
 #: classes/PurchaseOrders/POListButton.php:542
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1198
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1421
 #: classes/Settings/Settings.php:2554
 #: classes/StockCentral/SalesDataColumns.php:336
-#: classes/StockCentral/StockCentralColumns.php:237
+#: classes/StockCentral/StockCentralColumns.php:321
 #: classes/SupplierImport/SupplierImport.php:544
 #: classes/Suppliers/SupplierFields.php:398
 msgid "Serialization is not allowed."
@@ -126,7 +126,7 @@ msgid "Assign"
 msgstr ""
 
 #: classes/BulkActions/BulkSupplierAssignment.php:213
-#: classes/PurchaseOrders/POEmailSender.php:128
+#: classes/PurchaseOrders/POEmailSender.php:129
 #: classes/PurchaseOrders/POListButton.php:80
 #: classes/PurchaseOrders/POListButton.php:101
 #: classes/Settings/Settings.php:534
@@ -194,44 +194,44 @@ msgstr ""
 msgid "PO note for this variation..."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:85
+#: classes/PurchaseOrders/POEmailSender.php:86
 msgid "Send to Supplier"
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:120
+#: classes/PurchaseOrders/POEmailSender.php:121
 msgid "Send Purchase Order to Supplier"
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:121
+#: classes/PurchaseOrders/POEmailSender.php:122
 msgid "This will send the Purchase Order as a PDF attachment to the supplier."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:125
+#: classes/PurchaseOrders/POEmailSender.php:126
 msgid "Send Email"
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:138
+#: classes/PurchaseOrders/POEmailSender.php:139
 msgid "Sending email..."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:244
+#: classes/PurchaseOrders/POEmailSender.php:245
 msgid "Recipient:"
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:249
+#: classes/PurchaseOrders/POEmailSender.php:250
 msgid "Could not get supplier information."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:275
+#: classes/PurchaseOrders/POEmailSender.php:276
 msgid "Failed to send email."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:279
+#: classes/PurchaseOrders/POEmailSender.php:280
 msgid "An error occurred while sending the email."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:298
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1020
+#: classes/PurchaseOrders/POEmailSender.php:299
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1044
 #: classes/Settings/Settings.php:852
 #: classes/Settings/Settings.php:893
 #: classes/Settings/Settings.php:1009
@@ -240,47 +240,47 @@ msgstr ""
 msgid "Permission denied."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:304
+#: classes/PurchaseOrders/POEmailSender.php:305
 msgid "Invalid Purchase Order."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:312
+#: classes/PurchaseOrders/POEmailSender.php:313
 msgid "No supplier assigned to this Purchase Order."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:320
+#: classes/PurchaseOrders/POEmailSender.php:321
 msgid "Supplier does not have an email address."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:331
+#: classes/PurchaseOrders/POEmailSender.php:332
 msgid "Override Recipient"
 msgstr ""
 
 #. translators: %s: recipient email
-#: classes/PurchaseOrders/POEmailSender.php:348
+#: classes/PurchaseOrders/POEmailSender.php:349
 #, php-format
 msgid "Purchase Order sent successfully to %s"
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:354
+#: classes/PurchaseOrders/POEmailSender.php:355
 msgid "Invalid request."
 msgstr ""
 
 #. translators: 1: PO number, 2: supplier name
-#: classes/PurchaseOrders/POEmailSender.php:426
+#: classes/PurchaseOrders/POEmailSender.php:427
 #, php-format
 msgid "Purchase Order #%1$d - %2$s"
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:468
+#: classes/PurchaseOrders/POEmailSender.php:469
 msgid "Failed to send email. Please check your server email configuration."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:516
+#: classes/PurchaseOrders/POEmailSender.php:517
 msgid "Could not create temporary directory for PDF."
 msgstr ""
 
-#: classes/PurchaseOrders/POEmailSender.php:542
+#: classes/PurchaseOrders/POEmailSender.php:543
 msgid "Failed to write PDF file."
 msgstr ""
 
@@ -421,7 +421,7 @@ msgstr ""
 msgid "Purchase Orders created"
 msgstr ""
 
-#: classes/PurchaseOrders/POPDFModifier.php:125
+#: classes/PurchaseOrders/POPDFModifier.php:123
 msgid "Notes"
 msgstr ""
 
@@ -437,134 +437,161 @@ msgstr ""
 msgid "Pattern varies between years (likely trend, not seasonality)"
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:72
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1013
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:84
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1037
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1294
 #: classes/SupplierImport/SupplierImport.php:119
 #: classes/SupplierImport/SupplierImport.php:160
 msgid "Security check failed."
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:77
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:89
 msgid "You do not have permission to generate PO suggestions."
 msgstr ""
 
 #. translators: %s: error message
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:125
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:137
 #, php-format
 msgid "An error occurred: %s"
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:168
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:187
 msgid "No suppliers found."
 msgstr ""
 
 #. translators: 1: supplier name, 2: error message
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:309
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:333
 #, php-format
 msgid "Supplier %1$s: %2$s"
 msgstr ""
 
 #. translators: 1: created count, 2: created/would be created, 3: skipped count, 4: choices count
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:350
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:374
 #, php-format
 msgid "%1$d PO suggestions %2$s, %3$d suppliers skipped, %4$d need your choice."
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:352
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:376
 msgid "would be created"
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:352
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:376
 msgid "created"
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:412
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:436
 msgid "Failed to create Purchase Order."
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:460
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1129
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:484
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1153
 msgid "Note"
 msgstr ""
 
 #. translators: 1: number of items, 2: PO ID
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:505
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:529
 #, php-format
 msgid "Created new PO #%2$d with %1$d items"
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:553
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:577
 msgid "N/A"
 msgstr ""
 
 #. translators: 1: items count, 2: supplier name
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:571
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:595
 #, php-format
 msgid "DRY RUN: Would create PO with %1$d items for %2$s"
 msgstr ""
 
 #. translators: %d: number of POs created
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:687
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:711
 #, php-format
 msgid "[%s] %d Purchase Order Suggestions Created"
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:692
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:716
 msgid "The following Purchase Order suggestions have been created:"
 msgstr ""
 
 #. translators: 1: supplier name, 2: items count, 3: total, 4: edit URL
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:697
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:721
 #, php-format
 msgid "- %1$s: %2$d items, Total: %3$s"
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:705
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:729
 msgid "Please review these suggestions and update the quantities as needed."
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:746
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:770
 msgid "Twice Weekly"
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:751
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:775
 msgid "Once Weekly"
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:756
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:780
 msgid "Once Monthly"
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1029
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1053
 msgid "Cannot execute choices in Dry Run mode. Please disable Dry Run Mode first."
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1043
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1067
 msgid "Invalid data."
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1052
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1076
 msgid "No PO selected."
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1099
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1123
 msgid "Purchase Order not found."
 msgstr ""
 
 #. translators: %d: number of products added
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1151
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1175
 #, php-format
 msgid "Added %d products via SereniSoft ATUM Enhancer auto-generation."
 msgstr ""
 
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1159
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1183
 msgid "Unknown Supplier"
 msgstr ""
 
 #. translators: 1: number of products added, 2: PO ID
-#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1169
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1193
 #, php-format
 msgid "Added %1$d products to existing PO #%2$d"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1299
+msgid "You do not have permission to update restock status."
+msgstr ""
+
+#. translators: %d: number of products needing restock
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1312
+#, php-format
+msgid "Restock status updated. %d products need restocking."
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1332
+msgid "Update Restock Status (SAE)"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1367
+msgid "This will update the restock status for all products based on SAE algorithm. Continue?"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1389
+msgid "Error:"
+msgstr ""
+
+#: classes/PurchaseOrderSuggestions/POSuggestionGenerator.php:1395
+msgid "AJAX Error:"
 msgstr ""
 
 #: classes/Settings/Settings.php:80
@@ -1366,8 +1393,12 @@ msgstr ""
 msgid "Sold (Period)"
 msgstr ""
 
-#: classes/StockCentral/StockCentralColumns.php:91
+#: classes/StockCentral/StockCentralColumns.php:100
 msgid "MOQ"
+msgstr ""
+
+#: classes/StockCentral/StockCentralColumns.php:172
+msgid "Suggested"
 msgstr ""
 
 #: classes/SupplierImport/SupplierImport.php:124
