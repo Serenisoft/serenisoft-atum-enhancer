@@ -1,6 +1,12 @@
 # Changelog
 
-All notable changes to SereniSoft ATUM Enhancer will be documented in this file.
+All notable changes to ATUM Enhancer will be documented in this file.
+
+## [0.9.25] - 2025-12-28
+
+### Changed
+- **Plugin Renamed**: Display name changed from "SereniSoft ATUM Enhancer" to "ATUM Enhancer"
+- **Description Updated**: Now starts with "SAE (SereniSoft ATUM Enhancer)" to explain the abbreviation
 
 ## [0.9.24] - 2025-12-28
 

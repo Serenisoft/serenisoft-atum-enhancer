@@ -1,4 +1,4 @@
-# SereniSoft ATUM Enhancer
+# ATUM Enhancer
 
 Extends ATUM Inventory Management for WooCommerce with intelligent purchase order suggestions based on stock levels, lead times, seasonal patterns, and supplier closed periods.
 
